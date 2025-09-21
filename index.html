@@ -1,0 +1,1124 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>AgroSmart — Enhanced Dashboard</title>
+  <style>
+    :root{
+      /* Green Agricultural Theme */
+      --bg: #f1f8e9; 
+      --card: #ffffff; 
+      --accent: #4caf50; 
+      --muted: #666666;
+      --glass: rgba(76,175,80,0.1); 
+      --danger: #f44336; 
+      --success: #4caf50;
+      --card-border: rgba(76,175,80,0.2);
+      --primary-green: #2e7d32;
+      --light-green: #c8e6c9;
+      --dark-green: #1b5e20;
+      --background-green: #e8f5e8;
+    }
+    *{box-sizing:border-box;font-family:Inter,ui-sans-serif,system-ui,Segoe UI,Roboto,Arial}
+    body{margin:0;background:linear-gradient(135deg,#e8f5e8 0%,#f1f8e9 100%);color:#2e7d32}
+    .app{max-width:1100px;margin:18px auto;padding:18px}
+    header{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px}
+    .brand{display:flex;gap:12px;align-items:center;cursor:pointer}
+    .logo{width:56px;height:56px;border-radius:10px;background:linear-gradient(135deg,var(--accent),#66bb6a);display:flex;align-items:center;justify-content:center;color:#fff;font-weight:800}
+    .title{font-size:18px;font-weight:700}
+    .subtitle{font-size:12px;color:var(--muted)}
+    .controls{display:flex;gap:10px;align-items:center}
+    input[type=text],select{background:var(--glass);border:1px solid var(--card-border);padding:8px 10px;border-radius:8px;color:inherit}
+    button{background:var(--accent);border:none;padding:8px 12px;border-radius:8px;color:#fff;font-weight:600;cursor:pointer;transition:all 0.3s ease}
+    button:hover{background:var(--primary-green);transform:translateY(-1px)}
+    .grid{display:grid;grid-template-columns:1fr 340px;gap:16px}
+    .card{background:var(--card);padding:14px;border-radius:12px;border:1px solid var(--card-border);box-shadow:0 2px 8px rgba(76,175,80,0.1)}
+    .tiles{display:flex;gap:12px;flex-wrap:wrap}
+    .tile{flex:1;min-width:140px;padding:12px;border-radius:10px;background:var(--card);cursor:pointer;border:1px solid var(--card-border);transition:all 0.3s ease}
+    .tile:hover{background:var(--light-green);transform:translateY(-2px);box-shadow:0 4px 12px rgba(76,175,80,0.2)}
+    .tile h3{margin:0 0 6px 0;color:var(--primary-green)}
+    .muted{color:var(--muted);font-size:13px}
+    .big{font-size:28px;font-weight:700}
+    .hide{display:none}
+    .flex{display:flex;align-items:center;gap:8px}
+    .progress-wrap{background:var(--light-green);height:18px;border-radius:10px;overflow:hidden}
+    .progress{height:100%;background:linear-gradient(90deg,var(--accent),var(--primary-green));width:50%}
+    .pill{padding:6px 8px;border-radius:999px;border:1px solid var(--card-border);cursor:pointer;transition:all 0.2s}
+    .pill:hover{background:var(--light-green)}
+    .pill.active{background:rgba(76,175,80,0.2);color:var(--accent);border-color:var(--accent)}
+    .logs{max-height:280px;overflow:auto;margin-top:8px}
+    .log-item{padding:8px;border-radius:8px;border:1px solid var(--card-border);margin-bottom:8px;background:var(--card)}
+    .center{display:flex;align-items:center;justify-content:center}
+    .status-green{background:var(--light-green);padding:12px;border-radius:10px;color:var(--success);font-weight:700;border:1px solid var(--accent)}
+    .status-gray{background:var(--card);padding:12px;border-radius:10px;color:var(--muted);font-weight:700;border:1px solid var(--card-border)}
+    .sch-list{margin-top:10px}
+    input[type=time]{background:var(--card);border:1px solid var(--card-border);padding:6px;border-radius:8px;color:inherit}
+    input[type=number]{width:90px;padding:6px;border-radius:6px;border:1px solid var(--card-border);background:var(--card);color:inherit}
+    input[type=range]{width:100%}
+    .btn-ghost{background:transparent;border:1px solid var(--card-border);padding:8px;border-radius:8px;color:var(--muted);cursor:pointer;transition:all 0.3s ease}
+    .btn-ghost:hover{background:var(--light-green);color:var(--primary-green)}
+    footer{margin-top:18px;color:var(--muted);font-size:13px;text-align:center}
+
+    /* Modal Styles */
+    .modal-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(46,125,50,0.6);
+      display: none;
+      justify-content: center;
+      align-items: center;
+      z-index: 1000;
+      backdrop-filter: blur(4px);
+    }
+    .modal-overlay.active {
+      display: flex;
+    }
+    .modal {
+      background: var(--card);
+      border-radius: 12px;
+      border: 1px solid var(--card-border);
+      width: 90%;
+      max-width: 500px;
+      max-height: 90vh;
+      overflow: auto;
+      animation: modalSlideIn 0.3s ease;
+      box-shadow: 0 8px 32px rgba(76,175,80,0.3);
+    }
+    @keyframes modalSlideIn {
+      from {
+        transform: translateY(-20px);
+        opacity: 0;
+      }
+      to {
+        transform: translateY(0);
+        opacity: 1;
+      }
+    }
+    .modal-header {
+      padding: 20px;
+      border-bottom: 1px solid var(--card-border);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      background: var(--light-green);
+    }
+    .modal-title {
+      font-size: 18px;
+      font-weight: 700;
+      color: var(--primary-green);
+    }
+    .close-btn {
+      background: none;
+      border: none;
+      color: var(--muted);
+      font-size: 20px;
+      cursor: pointer;
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.3s ease;
+    }
+    .close-btn:hover {
+      background: var(--danger);
+      color: #fff;
+    }
+    .modal-body {
+      padding: 20px;
+    }
+    .modal-footer {
+      padding: 20px;
+      border-top: 1px solid var(--card-border);
+      display: flex;
+      justify-content: flex-end;
+      gap: 12px;
+      background: var(--light-green);
+    }
+    .form-group {
+      margin-bottom: 16px;
+    }
+    .form-group label {
+      display: block;
+      margin-bottom: 6px;
+      font-weight: 600;
+      color: var(--primary-green);
+    }
+    .form-group input,
+    .form-group select,
+    .form-group textarea {
+      width: 100%;
+      padding: 10px;
+      background: var(--card);
+      border: 1px solid var(--card-border);
+      border-radius: 8px;
+      color: inherit;
+      font-size: 14px;
+      transition: all 0.3s ease;
+    }
+    .form-group input:focus,
+    .form-group select:focus,
+    .form-group textarea:focus {
+      outline: none;
+      border-color: var(--accent);
+      box-shadow: 0 0 0 3px rgba(76,175,80,0.1);
+    }
+    .form-group textarea {
+      resize: vertical;
+      min-height: 80px;
+    }
+    .input-group {
+      display: flex;
+      gap: 8px;
+    }
+    .input-group input {
+      flex: 1;
+    }
+    .btn-primary {
+      background: var(--accent);
+      color: #fff;
+    }
+    .btn-secondary {
+      background: var(--muted);
+      color: #fff;
+    }
+
+    /* User Profile Button */
+    .user-profile-btn {
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      background: var(--light-green);
+      border: 1px solid var(--accent);
+      color: var(--primary-green);
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 18px;
+      transition: all 0.3s ease;
+    }
+    .user-profile-btn:hover {
+      background: var(--accent);
+      color: #fff;
+      transform: scale(1.05);
+    }
+
+    /* Countdown Timer Styles */
+    .countdown-display {
+      font-size: 16px;
+      font-weight: 700;
+      color: var(--primary-green);
+      background: var(--light-green);
+      padding: 8px 12px;
+      border-radius: 8px;
+      margin-top: 8px;
+      text-align: center;
+      border: 1px solid var(--accent);
+    }
+
+    /* Pause/Resume Button */
+    .pause-resume-btn {
+      background: #ff9800;
+      margin-left: 8px;
+    }
+    .resume-btn {
+      background: var(--success);
+    }
+
+    /* Enhanced notification styles for green theme */
+    .notification-section {
+      background: var(--card);
+      border: 1px solid var(--card-border);
+      border-radius: 12px;
+      padding: 16px;
+      margin-bottom: 16px;
+      box-shadow: 0 2px 8px rgba(76,175,80,0.1);
+    }
+
+    .notification-title {
+      font-weight: 700;
+      color: var(--primary-green);
+      margin-bottom: 12px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .sensor-data-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+      gap: 12px;
+      margin-bottom: 12px;
+    }
+
+    .sensor-data-item {
+      text-align: center;
+      padding: 12px;
+      background: var(--light-green);
+      border-radius: 8px;
+      border: 1px solid var(--card-border);
+      transition: all 0.3s ease;
+    }
+
+    .sensor-data-item:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 4px 8px rgba(76,175,80,0.2);
+    }
+
+    .sensor-data-label {
+      color: var(--muted);
+      font-size: 12px;
+      margin-bottom: 4px;
+    }
+
+    .sensor-data-value {
+      font-weight: 700;
+      color: var(--primary-green);
+      font-size: 16px;
+    }
+
+    .timer-notification {
+      background: var(--light-green);
+      padding: 12px;
+      border-radius: 8px;
+      border: 1px solid var(--accent);
+      color: var(--primary-green);
+      font-weight: 600;
+      text-align: center;
+    }
+
+    /* responsive */
+    @media(max-width:900px){
+      .grid{grid-template-columns:1fr}
+      .controls{flex-direction:column;align-items:flex-end}
+      .modal{width:95%;margin:10px}
+    }
+  </style>
+</head>
+<body>
+  <div class="app">
+    <!-- User Profile Modal -->
+    <div class="modal-overlay" id="userModal">
+      <div class="modal">
+        <div class="modal-header">
+          <div class="modal-title">User Details</div>
+          <button class="close-btn" id="closeUserModal">×</button>
+        </div>
+        <div class="modal-body">
+          <div class="form-group">
+            <label for="userFullName">Name</label>
+            <input type="text" id="userFullName" placeholder="Enter your full name">
+          </div>
+          <div class="form-group">
+            <label for="userAreaSize">Area Size</label>
+            <div class="input-group">
+              <input type="number" id="userAreaSize" placeholder="Enter area size" step="0.1">
+              <select id="userAreaUnit">
+                <option value="acres">Acres</option>
+                <option value="hectares">Hectares</option>
+                <option value="sq-meters">Sq Meters</option>
+              </select>
+            </div>
+          </div>
+          <div class="form-group">
+            <label for="userGeoLocation">Geo Location</label>
+            <input type="text" id="userGeoLocation" placeholder="Enter coordinates or map location">
+          </div>
+          <div class="form-group">
+            <label for="userMobileNumber">Mobile Number</label>
+            <input type="tel" id="userMobileNumber" placeholder="Enter mobile number">
+          </div>
+          <div class="form-group">
+            <label for="userFullAddress">Address</label>
+            <textarea id="userFullAddress" placeholder="Enter your full address"></textarea>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button class="btn-ghost" id="cancelUserDetails">Cancel</button>
+          <button class="btn-primary" id="saveUserDetails">Save</button>
+        </div>
+      </div>
+    </div>
+
+    <header>
+      <div class="brand" onclick="navTo('home')">
+        <div class="logo">AS</div>
+        <div>
+          <div class="title">AgroSmart</div>
+          <div class="subtitle">Smart Irrigation — Jorethang, South Sikkim</div>
+        </div>
+      </div>
+      <div class="controls">
+        <button class="user-profile-btn" id="userProfileBtn" title="User Profile">👤</button>
+        <label class="muted">Farmer name</label>
+        <input id="farmerName" type="text" placeholder="Enter farmer name" />
+        <label class="muted">API Base</label>
+        <input id="apiBase" type="text" placeholder="http://localhost:8000" style="width:180px" />
+        <button id="saveConfig">Save</button>
+      </div>
+    </header>
+    <div class="grid">
+      <!-- MAIN -->
+      <main>
+        <!-- HOME / Sections container -->
+        <section id="homeSection" class="card">
+          <div style="display:flex;justify-content:space-between;align-items:center">
+            <div>
+              <div class="muted">Welcome,</div>
+              <div style="font-size:17px;font-weight:700" id="farmerWelcome">Farmer</div>
+            </div>
+            <div style="width:320px">
+              <div style="display:flex;justify-content:space-between;align-items:center">
+                <div class="muted">Water tank level</div>
+                <div id="waterLevelText" class="muted">-- %</div>
+              </div>
+              <div class="progress-wrap" style="margin-top:8px">
+                <div id="waterProgress" class="progress" style="width:40%"></div>
+              </div>
+              <div style="display:flex;justify-content:space-between;align-items:center;margin-top:8px">
+                <div class="muted">Mode</div>
+                <div id="modeLabel" class="muted">Manual</div>
+              </div>
+            </div>
+          </div>
+          <hr style="border:none;height:1px;background:rgba(255,255,255,0.02);margin:12px 0">
+
+          <!-- Notification Container -->
+          <div style="background:rgba(255,255,255,0.01);padding:16px;border-radius:10px;margin-bottom:16px;border:1px solid rgba(255,255,255,0.02)">
+            <div style="font-weight:700;color:var(--accent);margin-bottom:12px;display:flex;align-items:center;gap:8px">
+              <span>📊</span> System Status & Notifications
+            </div>
+            <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:12px;margin-bottom:12px">
+              <div style="text-align:center">
+                <div class="muted">Temperature</div>
+                <div id="tempNotif" style="font-weight:700;color:var(--accent)">25°C</div>
+              </div>
+              <div style="text-align:center">
+                <div class="muted">Soil Moisture</div>
+                <div id="soilNotif" style="font-weight:700;color:var(--accent)">45%</div>
+              </div>
+              <div style="text-align:center">
+                <div class="muted">Humidity</div>
+                <div id="humidityNotif" style="font-weight:700;color:var(--accent)">68%</div>
+              </div>
+              <div style="text-align:center">
+                <div class="muted">Tank Level</div>
+                <div id="tankNotif" style="font-weight:700;color:var(--accent)">750L</div>
+              </div>
+            </div>
+            <div id="timerNotification" style="background:rgba(45,212,191,0.05);padding:12px;border-radius:8px;border:1px solid rgba(45,212,191,0.1);color:var(--accent);font-weight:600;text-align:center">
+              No active timers
+            </div>
+          </div>
+
+          <div class="tiles">
+            <div class="tile" data-nav="manual" id="tileManual">
+              <h3>Manual Irrigation</h3>
+              <div class="muted">Start immediate or schedule daily watering</div>
+            </div>
+            <div class="tile" data-nav="auto" id="tileAuto">
+              <h3>Automatic Irrigation</h3>
+              <div class="muted">Enable AI-based automatic control</div>
+            </div>
+            <div class="tile" data-nav="motorlog" id="tileMotor">
+              <h3>Motor Log</h3>
+              <div class="muted">See manual & automatic runtimes</div>
+            </div>
+            <div class="tile" data-nav="notifications" id="tileNotif">
+              <h3>Notifications</h3>
+              <div class="muted">View alerts and history</div>
+            </div>
+          </div>
+        </section>
+        <!-- MANUAL -->
+        <section id="manualSection" class="card hide">
+          <div style="display:flex;justify-content:space-between;align-items:center">
+            <div><h2 style="margin:0">Manual Irrigation</h2><div class="muted">Choose Scheduled or Immediate</div></div>
+            <div>
+              <button class="btn-ghost" data-nav="home">Back</button>
+            </div>
+          </div>
+          <div style="display:flex;gap:12px;margin-top:12px;flex-wrap:wrap">
+            <!-- Scheduled -->
+            <div style="flex:1;min-width:300px" class="card">
+              <div style="font-weight:700">Scheduled Irrigation</div>
+              <div class="muted" style="margin-top:6px">Create recurring daily schedules (like an alarm)</div>
+              <div style="margin-top:8px;display:flex;gap:8px;flex-wrap:wrap;align-items:center">
+                <div id="daysRow" style="display:flex;gap:6px;flex-wrap:wrap">
+                  <div class="pill" data-day="mon">Mon</div>
+                  <div class="pill" data-day="tue">Tue</div>
+                  <div class="pill" data-day="wed">Wed</div>
+                  <div class="pill" data-day="thu">Thu</div>
+                  <div class="pill" data-day="fri">Fri</div>
+                  <div class="pill" data-day="sat">Sat</div>
+                  <div class="pill" data-day="sun">Sun</div>
+                </div>
+                <div style="display:flex;gap:6px;align-items:center;margin-top:6px">
+                  <label class="muted">Start</label>
+                  <input id="schedStart" type="time" />
+                  <label class="muted">Duration (min)</label>
+                  <input id="schedDuration" type="number" min="1" max="720" value="10" />
+                  <select id="schedZone"><option value="zone1">Zone 1</option><option value="zone2">Zone 2</option></select>
+                  <button id="addSchedule">Add</button>
+                </div>
+              </div>
+              <div class="sch-list" id="scheduleList"></div>
+            </div>
+            <!-- Immediate -->
+            <div style="width:320px" class="card">
+              <div style="font-weight:700">Immediate Irrigation (Manual)</div>
+              <div class="muted" style="margin-top:6px">Start pump for selected minutes</div>
+              <div style="margin-top:10px">
+                <div style="display:flex;align-items:center;gap:12px">
+                  <input id="immediateDuration" type="range" min="1" max="120" value="5" />
+                  <div id="immediateVal" style="width:48px;text-align:right">5 min</div>
+                </div>
+                <div style="margin-top:10px;display:flex;gap:8px;align-items:center">
+                  <select id="immediateZone"><option value="zone1">Zone 1</option><option value="zone2">Zone 2</option></select>
+                  <button id="startImmediate">Start</button>
+                  <button id="stopImmediate">Stop</button>
+                  <button id="pauseImmediate" class="pause-resume-btn">Pause</button>
+                </div>
+                <div id="immediateCountdown" class="countdown-display hide">
+                  Time remaining: <span id="countdownTime">--:--</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+        <!-- AUTOMATIC -->
+        <section id="autoSection" class="card hide">
+          <div style="display:flex;justify-content:space-between;align-items:center">
+            <div><h2 style="margin:0">Automatic Irrigation</h2><div class="muted">AI-based automation</div></div>
+            <div>
+              <button class="btn-ghost" data-nav="home">Back</button>
+            </div>
+          </div>
+          <div style="display:flex;gap:12px;margin-top:12px;flex-wrap:wrap">
+            <div style="flex:1;min-width:300px" class="card">
+              <div style="display:flex;justify-content:space-between;align-items:center">
+                <div><strong>Automation</strong><div class="muted">Enable/disable automatic control</div></div>
+                <div>
+                  <label style="display:flex;gap:8px;align-items:center"><input id="autoToggle" type="checkbox" /> Enable</label>
+                </div>
+              </div>
+              <div style="margin-top:12px">
+                <div class="muted">AI Decision (preview)</div>
+                <div id="aiDecision" style="margin-top:8px" class="status-gray">—</div>
+              </div>
+            </div>
+            <div style="width:320px" class="card">
+              <div style="font-weight:700">Live Sensors</div>
+              <div style="margin-top:10px">
+                <div style="display:flex;justify-content:space-between"><div class="muted">Soil moisture</div><div id="soilVal">—%</div></div>
+                <div style="display:flex;justify-content:space-between"><div class="muted">Temperature</div><div id="tempVal">— °C</div></div>
+                <div style="display:flex;justify-content:space-between"><div class="muted">Humidity</div><div id="humVal">—%</div></div>
+                <div style="display:flex;justify-content:space-between"><div class="muted">Rain detected</div><div id="rainVal">—</div></div>
+              </div>
+              <div style="margin-top:10px;display:flex;gap:8px">
+                <button id="refreshSensors">Refresh</button>
+                <button id="simulateSensors">Simulate</button>
+              </div>
+            </div>
+          </div>
+        </section>
+        <!-- MOTOR LOG -->
+        <section id="motorSection" class="card hide">
+          <div style="display:flex;justify-content:space-between;align-items:center">
+            <div><h2 style="margin:0">Motor Log</h2><div class="muted">Manual vs Automatic</div></div>
+            <div>
+              <button class="btn-ghost" data-nav="home">Back</button>
+            </div>
+          </div>
+          <div style="display:flex;gap:12px;margin-top:12px;flex-wrap:wrap;align-items:stretch">
+            <div style="flex:1;min-width:260px" class="card">
+              <div style="display:flex;justify-content:space-between;align-items:center">
+                <div><strong>Manual Irrigation</strong></div>
+                <div id="manualStatus" class="status-gray">Inactive</div>
+              </div>
+              <div class="muted" style="margin-top:8px">Recent manual runtimes</div>
+              <div id="manualLogs" class="logs"></div>
+            </div>
+            <div style="width:320px" class="card">
+              <div style="display:flex;justify-content:space-between;align-items:center">
+                <div><strong>Automatic Irrigation</strong></div>
+                <div id="autoStatus" class="status-gray">Inactive</div>
+              </div>
+              <div class="muted" style="margin-top:8px">Recent automatic runtimes</div>
+              <div id="autoLogs" class="logs"></div>
+            </div>
+          </div>
+        </section>
+        <!-- NOTIFICATIONS -->
+        <section id="notifSection" class="card hide">
+          <div style="display:flex;justify-content:space-between;align-items:center">
+            <div><h2 style="margin:0">Notifications</h2><div class="muted">Alerts & history</div></div>
+            <div>
+              <button class="btn-ghost" data-nav="home">Back</button>
+            </div>
+          </div>
+          <div class="logs" id="notifications"></div>
+        </section>
+      </main>
+      <!-- SIDEBAR -->
+      <aside>
+        <div class="card">
+          <div style="display:flex;justify-content:space-between;align-items:center">
+            <div><strong>Configuration</strong><div class="muted">Set API base and local name</div></div>
+          </div>
+          <div style="margin-top:10px">
+            <div class="muted">API Base (backend)</div>
+            <input id="apiBaseSide" type="text" placeholder="http://localhost:8000" />
+            <div style="height:8px"></div>
+            <div class="muted">Sample endpoints</div>
+            <ul class="muted" style="margin-top:6px">
+              <li>GET /api/sensors</li>
+              <li>POST /api/irrigation/control</li>
+              <li>GET /api/motor-log?days=2</li>
+              <li>POST /api/schedules</li>
+            </ul>
+          </div>
+        </div>
+        <div style="height:12px"></div>
+        <div class="card">
+          <div style="font-weight:700">Quick actions</div>
+          <div style="display:flex;gap:8px;margin-top:10px;flex-wrap:wrap">
+            <button id="btnGoHome" class="btn-ghost" data-nav="home">Home</button>
+            <button id="btnGoManual" class="btn-ghost" data-nav="manual">Manual</button>
+            <button id="btnGoAuto" class="btn-ghost" data-nav="auto">Auto</button>
+            <button id="btnGoMotor" class="btn-ghost" data-nav="motorlog">Motor</button>
+          </div>
+        </div>
+      </aside>
+    </div>
+    <footer>
+      This is a frontend prototype. Configure backend URLs and secure endpoints before production.
+    </footer>
+  </div>
+  <script>
+    /***********************
+     * Enhanced AgroSmart Dashboard
+     * Features: User Profile Modal, Real-time Countdown Timer, Pause/Resume, Enhanced Notifications
+     ***********************/
+    const state = {
+      apiBaseKey: 'agro_api_base',
+      nameKey: 'agro_farmer_name',
+      userDataKey: 'agro_user_data',
+      schedulesKey: 'agro_schedules',
+      simulated: true,
+      sensors: {},
+      motorLog: { manual: [], automatic: [] },
+      manualActive: false,
+      autoActive: false,
+      soilAlertThreshold: 35,
+      countdownTimer: null,
+      pausedTime: null,
+      isPaused: false,
+      userData: {
+        name: '',
+        areaSize: '',
+        areaUnit: 'acres',
+        geoLocation: '',
+        mobile: '',
+        address: ''
+      }
+    };
+
+    // basic helpers
+    const $ = id => document.getElementById(id);
+    function navTo(key){
+      const sections = { home:'homeSection', manual:'manualSection', auto:'autoSection', motorlog:'motorSection', notifications:'notifSection' };
+      Object.values(sections).forEach(id=>$(id).classList.add('hide'));
+      const id = sections[key] || 'homeSection';
+      $(id).classList.remove('hide');
+    }
+
+    function apiURL(path){
+      const base = localStorage.getItem(state.apiBaseKey) || $('apiBase').value || $('apiBaseSide').value || '';
+      if(!base) return null;
+      return base.replace(/\/+$/,'') + path;
+    }
+
+    function pushNotif(text, level='info'){
+      const n = document.createElement('div'); 
+      n.className='log-item';
+      n.innerHTML = `<div style="font-weight:700">${new Date().toLocaleString()}</div><div>${text}</div>`;
+      $('notifications').prepend(n);
+
+      // Update notification in home section
+      updateTimerNotification(text);
+    }
+
+    function updateTimerNotification(message) {
+      const notifElement = $('timerNotification');
+      if (message.includes('started') || message.includes('Active')) {
+        notifElement.style.background = 'rgba(45,212,191,0.1)';
+        notifElement.style.borderColor = 'rgba(45,212,191,0.25)';
+        notifElement.style.color = 'var(--success)';
+      } else if (message.includes('completed') || message.includes('stopped')) {
+        notifElement.style.background = 'rgba(255,255,255,0.01)';
+        notifElement.style.borderColor = 'rgba(255,255,255,0.02)';
+        notifElement.style.color = 'var(--muted)';
+      }
+      notifElement.textContent = message;
+    }
+
+    // User Profile Modal Functions
+    function openUserModal() {
+      $('userModal').classList.add('active');
+      loadUserData();
+    }
+
+    function closeUserModal() {
+      $('userModal').classList.remove('active');
+    }
+
+    function loadUserData() {
+      const saved = localStorage.getItem(state.userDataKey);
+      if (saved) {
+        state.userData = JSON.parse(saved);
+      }
+
+      $('userFullName').value = state.userData.name || '';
+      $('userAreaSize').value = state.userData.areaSize || '';
+      $('userAreaUnit').value = state.userData.areaUnit || 'acres';
+      $('userGeoLocation').value = state.userData.geoLocation || '';
+      $('userMobileNumber').value = state.userData.mobile || '';
+      $('userFullAddress').value = state.userData.address || '';
+    }
+
+    function saveUserData() {
+      state.userData = {
+        name: $('userFullName').value,
+        areaSize: $('userAreaSize').value,
+        areaUnit: $('userAreaUnit').value,
+        geoLocation: $('userGeoLocation').value,
+        mobile: $('userMobileNumber').value,
+        address: $('userFullAddress').value
+      };
+
+      localStorage.setItem(state.userDataKey, JSON.stringify(state.userData));
+
+      // Update farmer name if provided
+      if (state.userData.name) {
+        $('farmerName').value = state.userData.name;
+        $('farmerWelcome').textContent = state.userData.name;
+        localStorage.setItem(state.nameKey, state.userData.name);
+      }
+
+      closeUserModal();
+      pushNotif('User details saved successfully', 'success');
+    }
+
+    // Countdown Timer Functions
+    function startCountdown(totalSeconds) {
+      if (state.countdownTimer) clearInterval(state.countdownTimer);
+
+      let remainingSeconds = totalSeconds;
+      const countdownElement = $('immediateCountdown');
+      const timeElement = $('countdownTime');
+
+      countdownElement.classList.remove('hide');
+
+      state.countdownTimer = setInterval(() => {
+        if (state.isPaused) return;
+
+        if (remainingSeconds <= 0) {
+          clearInterval(state.countdownTimer);
+          state.countdownTimer = null;
+          countdownElement.classList.add('hide');
+          stopImmediateIrrigation(true); // true indicates completion
+          return;
+        }
+
+        const minutes = Math.floor(remainingSeconds / 60);
+        const seconds = remainingSeconds % 60;
+        timeElement.textContent = `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+
+        remainingSeconds--;
+      }, 1000);
+    }
+
+    function pauseCountdown() {
+      state.isPaused = true;
+      state.pausedTime = new Date().getTime();
+      const pauseBtn = $('pauseImmediate');
+      pauseBtn.textContent = 'Resume';
+      pauseBtn.classList.add('resume-btn');
+      pushNotif('Manual irrigation paused');
+      updateTimerNotification('Irrigation paused');
+    }
+
+    function resumeCountdown() {
+      state.isPaused = false;
+      const pauseBtn = $('pauseImmediate');
+      pauseBtn.textContent = 'Pause';
+      pauseBtn.classList.remove('resume-btn');
+      pushNotif('Manual irrigation resumed');
+      updateTimerNotification('Irrigation resumed');
+    }
+
+    function stopCountdown() {
+      if (state.countdownTimer) {
+        clearInterval(state.countdownTimer);
+        state.countdownTimer = null;
+      }
+      state.isPaused = false;
+      $('immediateCountdown').classList.add('hide');
+      const pauseBtn = $('pauseImmediate');
+      pauseBtn.textContent = 'Pause';
+      pauseBtn.classList.remove('resume-btn');
+    }
+
+    function stopImmediateIrrigation(completed = false) {
+      stopCountdown();
+      state.manualActive = false;
+      updateMotorStatus();
+
+      if (completed) {
+        pushNotif('Manual irrigation completed automatically');
+        updateTimerNotification('No active timers');
+      } else {
+        pushNotif('Manual irrigation stopped manually');
+        updateTimerNotification('No active timers');
+      }
+    }
+
+    // Update sensor notifications in home section
+    function updateSensorNotifications() {
+      $('tempNotif').textContent = (state.sensors.temperature || 25) + '°C';
+      $('soilNotif').textContent = (state.sensors.soil_moisture || 45) + '%';
+      $('humidityNotif').textContent = (state.sensors.humidity || 68) + '%';
+      $('tankNotif').textContent = (state.sensors.water_level_pct ? (state.sensors.water_level_pct * 10) + 'L' : '750L');
+    }
+
+    // Event Listeners
+    $('userProfileBtn').addEventListener('click', openUserModal);
+    $('closeUserModal').addEventListener('click', closeUserModal);
+    $('cancelUserDetails').addEventListener('click', closeUserModal);
+    $('saveUserDetails').addEventListener('click', saveUserData);
+
+    // Close modal when clicking outside
+    $('userModal').addEventListener('click', (e) => {
+      if (e.target === $('userModal')) {
+        closeUserModal();
+      }
+    });
+
+    // load config
+    function loadConfig(){
+      const name = localStorage.getItem(state.nameKey) || '';
+      $('farmerName').value = name; 
+      $('farmerWelcome').innerText = name || 'Farmer';
+      $('apiBase').value = localStorage.getItem(state.apiBaseKey) || '';
+      $('apiBaseSide').value = localStorage.getItem(state.apiBaseKey) || '';
+      renderSchedules();
+    }
+    loadConfig();
+
+    // save config
+    $('saveConfig').addEventListener('click', ()=>{
+      localStorage.setItem(state.nameKey, $('farmerName').value || '');
+      const apiVal = $('apiBase').value || $('apiBaseSide').value || '';
+      if(apiVal) localStorage.setItem(state.apiBaseKey, apiVal);
+      $('farmerWelcome').innerText = $('farmerName').value || 'Farmer';
+      pushNotif('Configuration saved');
+    });
+
+    // navigation events
+    document.querySelectorAll('[data-nav]').forEach(el=>{
+      el.addEventListener('click', ()=> {
+        const key = el.getAttribute('data-nav');
+        const map = { motorlog:'motorlog', motor:'motorlog' };
+        navTo(map[key] || key);
+      });
+    });
+
+    // SCHEDULES UI
+    const dayPills = Array.from(document.querySelectorAll('#daysRow .pill'));
+    dayPills.forEach(p=>{
+      p.addEventListener('click', ()=> p.classList.toggle('active'));
+    });
+
+    function loadSchedules(){
+      const raw = localStorage.getItem(state.schedulesKey);
+      return raw ? JSON.parse(raw) : [];
+    }
+
+    function saveSchedules(schs){
+      localStorage.setItem(state.schedulesKey, JSON.stringify(schs));
+    }
+
+    function renderSchedules(){
+      const list = loadSchedules();
+      const el = $('scheduleList'); 
+      el.innerHTML = '';
+      if(list.length===0){ 
+        el.innerHTML = '<div class="muted">No schedules yet</div>'; 
+        return; 
+      }
+      list.forEach((s,i)=>{
+        const d = document.createElement('div'); 
+        d.className='log-item';
+        d.innerHTML = `<div style="display:flex;justify-content:space-between;align-items:center">
+                        <div><strong>${s.zone}</strong> • ${s.days.join(', ')} • ${s.start} for ${s.duration} min</div>
+                        <div><button data-i="${i}" class="btn-ghost removeSch">Delete</button></div>
+                       </div>`;
+        el.appendChild(d);
+      });
+
+      Array.from(document.querySelectorAll('.removeSch')).forEach(btn=>{
+        btn.addEventListener('click', ()=>{
+          const i = parseInt(btn.dataset.i); 
+          const arr = loadSchedules(); 
+          arr.splice(i,1); 
+          saveSchedules(arr); 
+          renderSchedules(); 
+          pushNotif('Schedule removed');
+        });
+      });
+    }
+
+    $('addSchedule').addEventListener('click', ()=>{
+      const days = dayPills.filter(p=>p.classList.contains('active')).map(p=>p.dataset.day);
+      const start = $('schedStart').value; 
+      const duration = parseInt($('schedDuration').value) || 10; 
+      const zone = $('schedZone').value;
+      if(days.length===0 || !start){ 
+        alert('Select days and start time'); 
+        return; 
+      }
+      const sch = { days, start, duration, zone };
+      const arr = loadSchedules(); 
+      arr.push(sch); 
+      saveSchedules(arr); 
+      renderSchedules(); 
+      pushNotif('Schedule added');
+    });
+
+    // Enhanced Immediate irrigation with countdown
+    const imRange = $('immediateDuration'); 
+    const imVal = $('immediateVal');
+    imRange.addEventListener('input', ()=> imVal.innerText = imRange.value + ' min');
+
+    $('startImmediate').addEventListener('click', async ()=>{
+      const mins = parseInt($('immediateDuration').value);
+      const zone = $('immediateZone').value;
+      const totalSeconds = mins * 60;
+
+      try {
+        state.manualActive = true; 
+        updateMotorStatus();
+        pushNotif(`Immediate irrigation started for ${mins} min`);
+        updateTimerNotification(`Irrigation active - ${mins} minutes remaining`);
+        startCountdown(totalSeconds);
+        addMotorLog('manual', { 
+          timestamp_start: new Date().toISOString(), 
+          duration_sec: totalSeconds, 
+          mode:'manual' 
+        });
+      } catch(e) { 
+        pushNotif('Failed to start immediate (no backend) — simulated'); 
+        state.manualActive = true; 
+        updateMotorStatus(); 
+        startCountdown(totalSeconds);
+      }
+    });
+
+    $('stopImmediate').addEventListener('click', ()=>{
+      stopImmediateIrrigation();
+    });
+
+    $('pauseImmediate').addEventListener('click', ()=>{
+      if (state.isPaused) {
+        resumeCountdown();
+      } else {
+        pauseCountdown();
+      }
+    });
+
+    // Rest of the original JavaScript code...
+    async function sendControl(payload){
+      const url = apiURL('/api/irrigation/control');
+      if(!url) return Promise.reject('no-backend');
+      const res = await fetch(url, {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(payload)});
+      if(!res.ok) throw new Error('control failed');
+    }
+
+    $('autoToggle').addEventListener('change', async ()=>{
+      const enabled = $('autoToggle').checked;
+      const url = apiURL('/api/irrigation/auto');
+      if(url){
+        try{ 
+          await fetch(url, {
+            method:'POST', 
+            headers:{'Content-Type':'application/json'}, 
+            body:JSON.stringify({enabled})
+          }); 
+        } catch(e){ 
+          console.warn('Auto toggle failed'); 
+        }
+      }
+      state.autoActive = enabled; 
+      updateMotorStatus();
+      pushNotif(`Automatic irrigation ${enabled ? 'enabled' : 'disabled'}`);
+    });
+
+    async function fetchSensors(){
+      const url = apiURL('/api/sensors');
+      if(!url){ 
+        simulateSensors(); 
+        return; 
+      }
+      try{
+        const res = await fetch(url);
+        if(!res.ok) throw new Error('bad');
+        const j = await res.json();
+        state.sensors = j; 
+        state.simulated = false;
+        updateSensorsUI(j);
+        updateSensorNotifications();
+        evaluateAlerts(j);
+      }catch(e){ 
+        console.warn(e); 
+        simulateSensors(); 
+      }
+    }
+
+    function simulateSensors(){
+      const s = {
+        soil_moisture: Math.floor(20 + Math.random()*60),
+        temperature: (18 + Math.random()*12).toFixed(1),
+        humidity: Math.floor(40 + Math.random()*40),
+        rain_detected: Math.random() > 0.85,
+        water_level_pct: Math.floor(25 + Math.random()*70)
+      };
+      state.sensors = s; 
+      state.simulated = true;
+      updateSensorsUI(s); 
+      updateSensorNotifications();
+      evaluateAlerts(s);
+    }
+
+    function updateSensorsUI(s){
+      $('soilVal').innerText = (s.soil_moisture ?? '—') + '%';
+      $('tempVal').innerText = (s.temperature ?? '—') + ' °C';
+      $('humVal').innerText = (s.humidity ?? '—') + '%';
+      $('rainVal').innerText = (s.rain_detected ? 'Yes' : 'No');
+      $('waterLevelText').innerText = (s.water_level_pct ?? '—') + ' %';
+      $('waterProgress').style.width = Math.max(6, Math.min(100, (s.water_level_pct||0))) + '%';
+
+      const decision = aiDecision(s);
+      const aiEl = $('aiDecision');
+      aiEl.innerText = decision.action + (decision.reason ? ' — ' + decision.reason : '');
+      aiEl.className = decision.action==='START' ? 'status-green' : 'status-gray';
+    }
+
+    function aiDecision(s){
+      if(s.rain_detected) return { action:'STOP', reason:'Rain detected' };
+      if((s.water_level_pct ?? 0) < 15) return { action:'STOP', reason:'Water tank low' };
+      if((s.soil_moisture ?? 100) < state.soilAlertThreshold) return { action:'START', reason:`Soil ${s.soil_moisture}% < ${state.soilAlertThreshold}%` };
+      return { action:'STOP', reason:'Conditions OK' };
+    }
+
+    function evaluateAlerts(s){
+      if((s.soil_moisture ?? 100) < state.soilAlertThreshold){
+        pushNotif(`Alert: Soil moisture low (${s.soil_moisture}%). Consider irrigation.`);
+      }
+      if(s.rain_detected) pushNotif('Alert: Rain detected — irrigation should be paused.');
+      if((s.water_level_pct ?? 100) < 12) pushNotif('Alert: Water tank level very low.');
+    }
+
+    function addMotorLog(type, entry){
+      if(!state.motorLog[type]) state.motorLog[type] = [];
+      state.motorLog[type].unshift(entry);
+      state.motorLog[type] = state.motorLog[type].slice(0, 48);
+      renderMotorLogs();
+    }
+
+    function renderMotorLogs(){
+      const man = $('manualLogs'); 
+      const auto = $('autoLogs');
+      man.innerHTML = ''; 
+      auto.innerHTML = '';
+
+      (state.motorLog.manual || []).forEach(it=>{
+        const d = document.createElement('div'); 
+        d.className='log-item';
+        const s = new Date(it.timestamp_start).toLocaleString(); 
+        d.innerHTML = `<div><strong>${s}</strong></div><div>${Math.round(it.duration_sec/60*100)/100} min</div>`;
+        man.appendChild(d);
+      });
+
+      (state.motorLog.automatic || []).forEach(it=>{
+        const d = document.createElement('div'); 
+        d.className='log-item';
+        const s = new Date(it.timestamp_start).toLocaleString(); 
+        d.innerHTML = `<div><strong>${s}</strong></div><div>${Math.round(it.duration_sec/60*100)/100} min</div>`;
+        auto.appendChild(d);
+      });
+    }
+
+    function updateMotorStatus(){
+      const ms = $('manualStatus'); 
+      const as = $('autoStatus');
+      if(state.manualActive){ 
+        ms.className='status-green'; 
+        ms.innerText='Active'; 
+      } else { 
+        ms.className='status-gray'; 
+        ms.innerText='Inactive'; 
+      }
+      if(state.autoActive){ 
+        as.className='status-green'; 
+        as.innerText='Active'; 
+      } else { 
+        as.className='status-gray'; 
+        as.innerText='Inactive'; 
+      }
+      $('modeLabel').innerText = state.autoActive ? 'Automatic' : 'Manual';
+    }
+
+    $('refreshSensors').addEventListener('click', fetchSensors);
+    $('simulateSensors').addEventListener('click', ()=>{ 
+      simulateSensors(); 
+      pushNotif('Simulated sensors updated'); 
+    });
+
+    // Initialize
+    fetchSensors(); 
+    renderMotorLogs(); 
+    updateMotorStatus();
+    updateSensorNotifications();
+
+    setInterval(()=>{ fetchSensors(); }, 30000);
+
+    setInterval(()=>{
+      if(state.simulated && Math.random()>0.85){
+        const duration = 60*(1+Math.floor(Math.random()*5));
+        const type = Math.random()>0.6 ? 'automatic' : 'manual';
+        addMotorLog(type, { 
+          timestamp_start: new Date().toISOString(), 
+          duration_sec: duration, 
+          mode: type 
+        });
+      }
+    }, 60000);
+
+    navTo('home');
+
+    window.addEventListener('load', ()=>{ 
+      $('apiBaseSide').value = localStorage.getItem(state.apiBaseKey) || ''; 
+      $('apiBase').value = $('apiBaseSide').value; 
+      loadUserData();
+    });
+
+  </script>
+</body>
+</html>
