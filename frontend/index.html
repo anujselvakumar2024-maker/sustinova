@@ -1,1 +1,1475 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>AgroSmart — AI-Powered Smart Irrigation</title>
+  <style>
+    :root{
+      /* Green Agricultural Theme */
+      --bg: #f1f8e9; 
+      --card: #ffffff; 
+      --accent: #4caf50; 
+      --muted: #666666;
+      --glass: rgba(76,175,80,0.1); 
+      --danger: #f44336; 
+      --success: #4caf50;
+      --card-border: rgba(76,175,80,0.2);
+      --primary-green: #2e7d32;
+      --light-green: #c8e6c9;
+      --dark-green: #1b5e20;
+      --background-green: #e8f5e8;
+      --warning: #ff9800;
+    }
+    *{box-sizing:border-box;font-family:Inter,ui-sans-serif,system-ui,Segoe UI,Roboto,Arial}
+    body{margin:0;background:linear-gradient(135deg,#e8f5e8 0%,#f1f8e9 100%);color:#2e7d32}
+    .app{max-width:1100px;margin:18px auto;padding:18px}
+    header{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px}
+    .brand{display:flex;gap:12px;align-items:center;cursor:pointer}
+    .logo{width:56px;height:56px;border-radius:10px;background:linear-gradient(135deg,var(--accent),#66bb6a);display:flex;align-items:center;justify-content:center;color:#fff;font-weight:800}
+    .title{font-size:18px;font-weight:700}
+    .subtitle{font-size:12px;color:var(--muted)}
+    .controls{display:flex;gap:10px;align-items:center}
+    input[type=text],select{background:var(--glass);border:1px solid var(--card-border);padding:8px 10px;border-radius:8px;color:inherit}
+    button{background:var(--accent);border:none;padding:8px 12px;border-radius:8px;color:#fff;font-weight:600;cursor:pointer;transition:all 0.3s ease}
+    button:hover{background:var(--primary-green);transform:translateY(-1px)}
+    .grid{display:grid;grid-template-columns:1fr 340px;gap:16px}
+    .card{background:var(--card);padding:14px;border-radius:12px;border:1px solid var(--card-border);box-shadow:0 2px 8px rgba(76,175,80,0.1)}
+    .tiles{display:flex;gap:12px;flex-wrap:wrap}
+    .tile{flex:1;min-width:140px;padding:12px;border-radius:10px;background:var(--card);cursor:pointer;border:1px solid var(--card-border);transition:all 0.3s ease}
+    .tile:hover{background:var(--light-green);transform:translateY(-2px);box-shadow:0 4px 12px rgba(76,175,80,0.2)}
+    .tile h3{margin:0 0 6px 0;color:var(--primary-green)}
+    .muted{color:var(--muted);font-size:13px}
+    .big{font-size:28px;font-weight:700}
+    .hide{display:none}
+    .flex{display:flex;align-items:center;gap:8px}
+    .progress-wrap{background:var(--light-green);height:18px;border-radius:10px;overflow:hidden}
+    .progress{height:100%;background:linear-gradient(90deg,var(--accent),var(--primary-green));width:50%}
+    .pill{padding:6px 8px;border-radius:999px;border:1px solid var(--card-border);cursor:pointer;transition:all 0.2s}
+    .pill:hover{background:var(--light-green)}
+    .pill.active{background:rgba(76,175,80,0.2);color:var(--accent);border-color:var(--accent)}
+    .logs{max-height:280px;overflow:auto;margin-top:8px}
+    .log-item{padding:8px;border-radius:8px;border:1px solid var(--card-border);margin-bottom:8px;background:var(--card)}
+    .center{display:flex;align-items:center;justify-content:center}
+    .status-green{background:var(--light-green);padding:12px;border-radius:10px;color:var(--success);font-weight:700;border:1px solid var(--accent)}
+    .status-gray{background:var(--card);padding:12px;border-radius:10px;color:var(--muted);font-weight:700;border:1px solid var(--card-border)}
+    .sch-list{margin-top:10px}
+    input[type=time]{background:var(--card);border:1px solid var(--card-border);padding:6px;border-radius:8px;color:inherit}
+    input[type=number]{width:90px;padding:6px;border-radius:6px;border:1px solid var(--card-border);background:var(--card);color:inherit}
+    input[type=range]{width:100%}
+    .btn-ghost{background:transparent;border:1px solid var(--card-border);padding:8px;border-radius:8px;color:var(--muted);cursor:pointer;transition:all 0.3s ease}
+    .btn-ghost:hover{background:var(--light-green);color:var(--primary-green)}
+    footer{margin-top:18px;color:var(--muted);font-size:13px;text-align:center}
 
+    /* Language Selector */
+    .language-selector {
+      position: relative;
+      display: inline-block;
+    }
+
+    .language-btn {
+      background: var(--light-green);
+      border: 1px solid var(--accent);
+      color: var(--primary-green);
+      border-radius: 8px;
+      padding: 8px 12px;
+      cursor: pointer;
+      font-size: 14px;
+      font-weight: 600;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      transition: all 0.3s ease;
+    }
+
+    .language-btn:hover {
+      background: var(--accent);
+      color: white;
+    }
+
+    .language-dropdown {
+      position: absolute;
+      top: 100%;
+      right: 0;
+      background: var(--card);
+      border: 1px solid var(--card-border);
+      border-radius: 8px;
+      box-shadow: 0 4px 12px rgba(76,175,80,0.2);
+      min-width: 120px;
+      z-index: 1000;
+      display: none;
+    }
+
+    .language-dropdown.show {
+      display: block;
+    }
+
+    .language-option {
+      padding: 10px 12px;
+      cursor: pointer;
+      border-bottom: 1px solid var(--card-border);
+      transition: all 0.3s ease;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .language-option:last-child {
+      border-bottom: none;
+    }
+
+    .language-option:hover {
+      background: var(--light-green);
+      color: var(--primary-green);
+    }
+
+    .language-option.active {
+      background: var(--accent);
+      color: white;
+    }
+
+    /* Enhanced Mode Toggle */
+    .mode-toggle-section {
+      text-align: center;
+      margin: 20px 0;
+    }
+
+    .mode-toggle-container {
+      display: inline-block;
+      background: var(--card);
+      border-radius: 50px;
+      padding: 4px;
+      box-shadow: 0 2px 8px rgba(76,175,80,0.15);
+      border: 2px solid var(--card-border);
+    }
+
+    .toggle-switch {
+      position: relative;
+      display: inline-block;
+      width: 240px;
+      height: 48px;
+    }
+
+    .toggle-switch input {
+      opacity: 0;
+      width: 0;
+      height: 0;
+    }
+
+    .slider {
+      position: absolute;
+      cursor: pointer;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: linear-gradient(135deg, var(--primary-green), var(--accent));
+      transition: 0.4s;
+      border-radius: 24px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 16px;
+      color: white;
+      font-weight: 700;
+      font-size: 14px;
+      box-shadow: inset 0 2px 4px rgba(0,0,0,0.1);
+    }
+
+    .slider::before {
+      position: absolute;
+      content: "";
+      height: 40px;
+      width: 112px;
+      left: 4px;
+      bottom: 4px;
+      background: white;
+      transition: 0.4s;
+      border-radius: 20px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+      z-index: 2;
+    }
+
+    input:checked + .slider {
+      background: linear-gradient(135deg, var(--accent), #81c784);
+    }
+
+    input:checked + .slider::before {
+      transform: translateX(120px);
+    }
+
+    .toggle-text-manual,
+    .toggle-text-auto {
+      z-index: 3;
+      position: relative;
+      transition: color 0.4s;
+      text-shadow: 0 1px 2px rgba(0,0,0,0.1);
+    }
+
+    input:not(:checked) + .slider .toggle-text-manual {
+      color: var(--primary-green);
+      font-weight: 800;
+    }
+
+    input:checked + .slider .toggle-text-auto {
+      color: var(--primary-green);
+      font-weight: 800;
+    }
+
+    /* AI Status Display */
+    .ai-status-container {
+      background: linear-gradient(135deg, var(--card), #f8fffe);
+      border: 2px solid var(--accent);
+      border-radius: 12px;
+      padding: 16px;
+      margin: 16px 0;
+      box-shadow: 0 4px 12px rgba(76,175,80,0.15);
+    }
+
+    .ai-status-header {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 12px;
+    }
+
+    .ai-status-icon {
+      width: 32px;
+      height: 32px;
+      background: var(--accent);
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: white;
+      font-size: 16px;
+      animation: pulse-ai 2s infinite;
+    }
+
+    @keyframes pulse-ai {
+      0%, 100% { transform: scale(1); opacity: 1; }
+      50% { transform: scale(1.1); opacity: 0.8; }
+    }
+
+    .ai-status-title {
+      font-weight: 700;
+      color: var(--primary-green);
+      font-size: 16px;
+    }
+
+    .ai-decision {
+      background: var(--light-green);
+      padding: 12px;
+      border-radius: 8px;
+      border: 1px solid var(--accent);
+      color: var(--primary-green);
+      font-weight: 600;
+      text-align: center;
+      margin-bottom: 10px;
+    }
+
+    .ai-reasoning {
+      font-size: 14px;
+      color: var(--muted);
+      text-align: center;
+      font-style: italic;
+    }
+
+    /* Enhanced Notification Section */
+    .notification-section {
+      background: var(--card);
+      border: 1px solid var(--card-border);
+      border-radius: 12px;
+      padding: 16px;
+      margin-bottom: 16px;
+      box-shadow: 0 2px 8px rgba(76,175,80,0.1);
+    }
+
+    .notification-title {
+      font-weight: 700;
+      color: var(--primary-green);
+      margin-bottom: 12px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .sensor-data-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+      gap: 12px;
+      margin-bottom: 12px;
+    }
+
+    .sensor-data-item {
+      text-align: center;
+      padding: 12px;
+      background: var(--light-green);
+      border-radius: 8px;
+      border: 1px solid var(--card-border);
+      transition: all 0.3s ease;
+    }
+
+    .sensor-data-item:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 4px 8px rgba(76,175,80,0.2);
+    }
+
+    .sensor-data-label {
+      color: var(--muted);
+      font-size: 12px;
+      margin-bottom: 4px;
+    }
+
+    .sensor-data-value {
+      font-weight: 700;
+      color: var(--primary-green);
+      font-size: 16px;
+    }
+
+    /* User Profile Button */
+    .user-profile-btn {
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      background: var(--light-green);
+      border: 1px solid var(--accent);
+      color: var(--primary-green);
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 18px;
+      transition: all 0.3s ease;
+    }
+    .user-profile-btn:hover {
+      background: var(--accent);
+      color: #fff;
+      transform: scale(1.05);
+    }
+
+    /* Modal Styles */
+    .modal-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(46,125,50,0.6);
+      display: none;
+      justify-content: center;
+      align-items: center;
+      z-index: 1000;
+      backdrop-filter: blur(4px);
+    }
+    .modal-overlay.active {
+      display: flex;
+    }
+    .modal {
+      background: var(--card);
+      border-radius: 12px;
+      border: 1px solid var(--card-border);
+      width: 90%;
+      max-width: 500px;
+      max-height: 90vh;
+      overflow: auto;
+      animation: modalSlideIn 0.3s ease;
+      box-shadow: 0 8px 32px rgba(76,175,80,0.3);
+    }
+    @keyframes modalSlideIn {
+      from {
+        transform: translateY(-20px);
+        opacity: 0;
+      }
+      to {
+        transform: translateY(0);
+        opacity: 1;
+      }
+    }
+    .modal-header {
+      padding: 20px;
+      border-bottom: 1px solid var(--card-border);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      background: var(--light-green);
+    }
+    .modal-title {
+      font-size: 18px;
+      font-weight: 700;
+      color: var(--primary-green);
+    }
+    .close-btn {
+      background: none;
+      border: none;
+      color: var(--muted);
+      font-size: 20px;
+      cursor: pointer;
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.3s ease;
+    }
+    .close-btn:hover {
+      background: var(--danger);
+      color: #fff;
+    }
+    .modal-body {
+      padding: 20px;
+    }
+    .modal-footer {
+      padding: 20px;
+      border-top: 1px solid var(--card-border);
+      display: flex;
+      justify-content: flex-end;
+      gap: 12px;
+      background: var(--light-green);
+    }
+    .form-group {
+      margin-bottom: 16px;
+    }
+    .form-group label {
+      display: block;
+      margin-bottom: 6px;
+      font-weight: 600;
+      color: var(--primary-green);
+    }
+    .form-group input,
+    .form-group select,
+    .form-group textarea {
+      width: 100%;
+      padding: 10px;
+      background: var(--card);
+      border: 1px solid var(--card-border);
+      border-radius: 8px;
+      color: inherit;
+      font-size: 14px;
+      transition: all 0.3s ease;
+    }
+    .form-group input:focus,
+    .form-group select:focus,
+    .form-group textarea:focus {
+      outline: none;
+      border-color: var(--accent);
+      box-shadow: 0 0 0 3px rgba(76,175,80,0.1);
+    }
+    .form-group textarea {
+      resize: vertical;
+      min-height: 80px;
+    }
+    .input-group {
+      display: flex;
+      gap: 8px;
+    }
+    .input-group input {
+      flex: 1;
+    }
+    .btn-primary {
+      background: var(--accent);
+      color: #fff;
+    }
+    .btn-secondary {
+      background: var(--muted);
+      color: #fff;
+    }
+
+    /* Countdown Timer Styles */
+    .countdown-display {
+      font-size: 16px;
+      font-weight: 700;
+      color: var(--primary-green);
+      background: var(--light-green);
+      padding: 8px 12px;
+      border-radius: 8px;
+      margin-top: 8px;
+      text-align: center;
+      border: 1px solid var(--accent);
+    }
+
+    /* Pause/Resume Button */
+    .pause-resume-btn {
+      background: #ff9800;
+      margin-left: 8px;
+    }
+    .resume-btn {
+      background: var(--success);
+    }
+
+    /* responsive */
+    @media(max-width:900px){
+      .grid{grid-template-columns:1fr}
+      .controls{flex-direction:column;align-items:flex-end}
+      .modal{width:95%;margin:10px}
+      .toggle-switch{width:200px}
+      .slider::before{width:92px}
+      input:checked + .slider::before{transform:translateX(100px)}
+    }
+  </style>
+</head>
+<body>
+  <div class="app">
+    <!-- User Profile Modal -->
+    <div class="modal-overlay" id="userModal">
+      <div class="modal">
+        <div class="modal-header">
+          <div class="modal-title" data-translate="user-details">User Details</div>
+          <button class="close-btn" id="closeUserModal">×</button>
+        </div>
+        <div class="modal-body">
+          <div class="form-group">
+            <label for="userFullName" data-translate="name">Name</label>
+            <input type="text" id="userFullName" data-translate-placeholder="enter-name">
+          </div>
+          <div class="form-group">
+            <label for="userAreaSize" data-translate="area-size">Area Size</label>
+            <div class="input-group">
+              <input type="number" id="userAreaSize" data-translate-placeholder="enter-area-size" step="0.1">
+              <select id="userAreaUnit">
+                <option value="acres" data-translate="acres">Acres</option>
+                <option value="hectares" data-translate="hectares">Hectares</option>
+                <option value="sq-meters" data-translate="sq-meters">Sq Meters</option>
+              </select>
+            </div>
+          </div>
+          <div class="form-group">
+            <label for="userGeoLocation" data-translate="geo-location">Geo Location</label>
+            <input type="text" id="userGeoLocation" data-translate-placeholder="enter-location">
+          </div>
+          <div class="form-group">
+            <label for="userMobileNumber" data-translate="mobile-number">Mobile Number</label>
+            <input type="tel" id="userMobileNumber" data-translate-placeholder="enter-mobile">
+          </div>
+          <div class="form-group">
+            <label for="userFullAddress" data-translate="address">Address</label>
+            <textarea id="userFullAddress" data-translate-placeholder="enter-address"></textarea>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button class="btn-ghost" id="cancelUserDetails" data-translate="cancel">Cancel</button>
+          <button class="btn-primary" id="saveUserDetails" data-translate="save">Save</button>
+        </div>
+      </div>
+    </div>
+
+    <header>
+      <div class="brand" onclick="navTo('home')">
+        <button class="user-profile-btn" id="userProfileBtn" title="User Profile">👤</button>
+        <div class="logo">AS</div>
+        <div>
+          <div class="title">AgroSmart</div>
+          <div class="subtitle" data-translate="subtitle">Smart Irrigation — Jorethang, South Sikkim</div>
+        </div>
+      </div>
+      <div class="controls">
+        <div class="language-selector">
+          <button class="language-btn" id="languageBtn">
+            <span id="currentLangIcon">🇺🇸</span>
+            <span id="currentLangText">English</span>
+            <span>▼</span>
+          </button>
+          <div class="language-dropdown" id="languageDropdown">
+            <div class="language-option active" data-lang="en">
+              <span>🇺🇸</span>
+              <span>English</span>
+            </div>
+            <div class="language-option" data-lang="hi">
+              <span>🇮🇳</span>
+              <span>हिंदी</span>
+            </div>
+            <div class="language-option" data-lang="ne">
+              <span>🇳🇵</span>
+              <span>नेपाली</span>
+            </div>
+          </div>
+        </div>
+        <label class="muted" data-translate="farmer-name">Farmer name</label>
+        <input id="farmerName" type="text" data-translate-placeholder="enter-farmer-name" />
+        <label class="muted" data-translate="api-base">API Base</label>
+        <input id="apiBase" type="text" placeholder="http://localhost:8000" style="width:180px" />
+        <button id="saveConfig" data-translate="save">Save</button>
+      </div>
+    </header>
+
+    <div class="grid">
+      <!-- MAIN -->
+      <main>
+        <!-- Notification Container -->
+        <section class="notification-section">
+          <h2 class="notification-title">
+            <span>📊</span> 
+            <span data-translate="system-status">System Status & Notifications</span>
+          </h2>
+
+          <!-- Sensor Data -->
+          <div class="sensor-data-grid">
+            <div class="sensor-data-item">
+              <div class="sensor-data-label" data-translate="temperature">Temperature</div>
+              <div class="sensor-data-value" id="tempNotif">25°C</div>
+            </div>
+            <div class="sensor-data-item">
+              <div class="sensor-data-label" data-translate="soil-moisture">Soil Moisture</div>
+              <div class="sensor-data-value" id="soilNotif">45%</div>
+            </div>
+            <div class="sensor-data-item">
+              <div class="sensor-data-label" data-translate="humidity">Humidity</div>
+              <div class="sensor-data-value" id="humidityNotif">68%</div>
+            </div>
+            <div class="sensor-data-item">
+              <div class="sensor-data-label" data-translate="tank-level">Tank Level</div>
+              <div class="sensor-data-value" id="tankNotif">750L</div>
+            </div>
+          </div>
+
+          <div id="timerNotification" style="background:rgba(76,175,80,0.1);padding:12px;border-radius:8px;border:1px solid rgba(76,175,80,0.2);color:var(--primary-green);font-weight:600;text-align:center" data-translate="no-active-timers">
+            No active timers
+          </div>
+        </section>
+
+        <!-- Mode Toggle -->
+        <section class="mode-toggle-section">
+          <div class="mode-toggle-container">
+            <label class="toggle-switch">
+              <input type="checkbox" id="modeToggle">
+              <span class="slider">
+                <span class="toggle-text-manual" data-translate="manual">Manual</span>
+                <span class="toggle-text-auto" data-translate="automatic">Automatic</span>
+              </span>
+            </label>
+          </div>
+        </section>
+
+        <!-- AI Status Display -->
+        <section class="ai-status-container" id="aiStatusContainer" style="display: none;">
+          <div class="ai-status-header">
+            <div class="ai-status-icon">🤖</div>
+            <div class="ai-status-title" data-translate="ai-irrigation-system">AI Irrigation System</div>
+          </div>
+          <div class="ai-decision" id="aiDecisionText" data-translate="ai-analyzing">AI is analyzing sensor data...</div>
+          <div class="ai-reasoning" id="aiReasoningText" data-translate="ai-reasoning">Making intelligent irrigation decisions based on current conditions</div>
+        </section>
+
+        <!-- Manual Controls -->
+        <section class="card" id="manualControls">
+          <div class="tiles">
+            <div class="tile" data-nav="manual" id="tileManual">
+              <h3 data-translate="manual-irrigation">Manual Irrigation</h3>
+              <div class="muted" data-translate="manual-desc">Start immediate or schedule daily watering</div>
+            </div>
+            <div class="tile" data-nav="motor-log" id="tileMotor">
+              <h3 data-translate="motor-log">Motor Log</h3>
+              <div class="muted" data-translate="motor-log-desc">See manual & automatic runtimes</div>
+            </div>
+            <div class="tile" data-nav="notifications" id="tileNotif">
+              <h3 data-translate="notifications">Notifications</h3>
+              <div class="muted" data-translate="notifications-desc">View alerts and history</div>
+            </div>
+          </div>
+
+          <!-- Immediate Controls -->
+          <div style="margin-top: 20px;">
+            <h3 data-translate="immediate-irrigation">Immediate Irrigation</h3>
+            <div style="margin-top:10px">
+              <div style="display:flex;align-items:center;gap:12px;margin-bottom:16px">
+                <span data-translate="timer-length">Timer Length:</span>
+                <input id="immediateDuration" type="range" min="1" max="120" value="5" style="flex:1" />
+                <div id="immediateVal" style="width:60px;text-align:right;font-weight:700;color:var(--primary-green)">5 min</div>
+              </div>
+              <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+                <select id="immediateZone">
+                  <option value="zone1" data-translate="zone1">Zone 1</option>
+                  <option value="zone2" data-translate="zone2">Zone 2</option>
+                </select>
+                <button id="startImmediate" data-translate="start">Start</button>
+                <button id="stopImmediate" data-translate="stop">Stop</button>
+                <button id="pauseImmediate" class="pause-resume-btn" data-translate="pause">Pause</button>
+              </div>
+              <div id="immediateCountdown" class="countdown-display hide">
+                <span data-translate="time-remaining">Time remaining:</span> <span id="countdownTime">--:--</span>
+              </div>
+            </div>
+          </div>
+        </section>
+      </main>
+
+      <!-- SIDEBAR -->
+      <aside>
+        <div class="card">
+          <div style="display:flex;justify-content:space-between;align-items:center">
+            <div>
+              <strong data-translate="configuration">Configuration</strong>
+              <div class="muted" data-translate="config-desc">Set API base and local name</div>
+            </div>
+          </div>
+          <div style="margin-top:10px">
+            <div class="muted" data-translate="api-base">API Base (backend)</div>
+            <input id="apiBaseSide" type="text" placeholder="http://localhost:8000" />
+            <div style="height:8px"></div>
+            <div class="muted" data-translate="sample-endpoints">Sample endpoints</div>
+            <ul class="muted" style="margin-top:6px">
+              <li>GET /api/sensors</li>
+              <li>POST /api/irrigation/control</li>
+              <li>GET /api/motor-log?days=2</li>
+              <li>POST /api/schedules</li>
+            </ul>
+          </div>
+        </div>
+        <div style="height:12px"></div>
+        <div class="card">
+          <div style="font-weight:700" data-translate="quick-actions">Quick actions</div>
+          <div style="display:flex;gap:8px;margin-top:10px;flex-wrap:wrap">
+            <button id="btnGoHome" class="btn-ghost" data-nav="home" data-translate="home">Home</button>
+            <button id="btnRefreshSensors" class="btn-ghost" data-translate="refresh-sensors">Refresh Sensors</button>
+            <button id="btnSimulateSensors" class="btn-ghost" data-translate="simulate-sensors">Simulate</button>
+          </div>
+        </div>
+      </aside>
+    </div>
+    <footer data-translate="footer-text">
+      This is a frontend prototype. Configure backend URLs and secure endpoints before production.
+    </footer>
+  </div>
+
+  <script>
+    // Translation data
+    const translations = {
+      en: {
+        "user-details": "User Details",
+        "name": "Name",
+        "enter-name": "Enter your full name",
+        "area-size": "Area Size",
+        "enter-area-size": "Enter area size",
+        "acres": "Acres",
+        "hectares": "Hectares",
+        "sq-meters": "Sq Meters",
+        "geo-location": "Geo Location",
+        "enter-location": "Enter coordinates or map location",
+        "mobile-number": "Mobile Number",
+        "enter-mobile": "Enter mobile number",
+        "address": "Address",
+        "enter-address": "Enter your full address",
+        "cancel": "Cancel",
+        "save": "Save",
+        "subtitle": "Smart Irrigation — Jorethang, South Sikkim",
+        "farmer-name": "Farmer name",
+        "enter-farmer-name": "Enter farmer name",
+        "api-base": "API Base",
+        "system-status": "System Status & Notifications",
+        "temperature": "Temperature",
+        "soil-moisture": "Soil Moisture",
+        "humidity": "Humidity",
+        "tank-level": "Tank Level",
+        "no-active-timers": "No active timers",
+        "manual": "Manual",
+        "automatic": "Automatic",
+        "ai-irrigation-system": "AI Irrigation System",
+        "ai-analyzing": "AI is analyzing sensor data...",
+        "ai-reasoning": "Making intelligent irrigation decisions based on current conditions",
+        "manual-irrigation": "Manual Irrigation",
+        "manual-desc": "Start immediate or schedule daily watering",
+        "motor-log": "Motor Log",
+        "motor-log-desc": "See manual & automatic runtimes",
+        "notifications": "Notifications",
+        "notifications-desc": "View alerts and history",
+        "immediate-irrigation": "Immediate Irrigation",
+        "timer-length": "Timer Length:",
+        "zone1": "Zone 1",
+        "zone2": "Zone 2",
+        "start": "Start",
+        "stop": "Stop",
+        "pause": "Pause",
+        "time-remaining": "Time remaining:",
+        "configuration": "Configuration",
+        "config-desc": "Set API base and local name",
+        "sample-endpoints": "Sample endpoints",
+        "quick-actions": "Quick actions",
+        "home": "Home",
+        "refresh-sensors": "Refresh Sensors",
+        "simulate-sensors": "Simulate",
+        "footer-text": "This is a frontend prototype. Configure backend URLs and secure endpoints before production.",
+        "irrigation-needed": "Irrigation needed based on soil moisture",
+        "conditions-optimal": "Soil conditions are optimal",
+        "rain-detected": "Rain detected - irrigation paused",
+        "water-level-low": "Water tank level too low for irrigation",
+        "ai-irrigation-started": "AI started irrigation for",
+        "minutes": "minutes"
+      },
+      hi: {
+        "user-details": "उपयोगकर्ता विवरण",
+        "name": "नाम",
+        "enter-name": "अपना पूरा नाम दर्ज करें",
+        "area-size": "क्षेत्र का आकार",
+        "enter-area-size": "क्षेत्र का आकार दर्ज करें",
+        "acres": "एकड़",
+        "hectares": "हेक्टेयर",
+        "sq-meters": "वर्ग मीटर",
+        "geo-location": "भौगोलिक स्थान",
+        "enter-location": "निर्देशांक या मानचित्र स्थान दर्ज करें",
+        "mobile-number": "मोबाइल नंबर",
+        "enter-mobile": "मोबाइल नंबर दर्ज करें",
+        "address": "पता",
+        "enter-address": "अपना पूरा पता दर्ज करें",
+        "cancel": "रद्द करें",
+        "save": "सेव करें",
+        "subtitle": "स्मार्ट सिंचाई — जोरेथांग, दक्षिण सिक्किम",
+        "farmer-name": "किसान का नाम",
+        "enter-farmer-name": "किसान का नाम दर्ज करें",
+        "api-base": "एपीआई बेस",
+        "system-status": "सिस्टम स्थिति और अधिसूचनाएं",
+        "temperature": "तापमान",
+        "soil-moisture": "मिट्टी की नमी",
+        "humidity": "आर्द्रता",
+        "tank-level": "टंकी स्तर",
+        "no-active-timers": "कोई सक्रिय टाइमर नहीं",
+        "manual": "मैनुअल",
+        "automatic": "स्वचालित",
+        "ai-irrigation-system": "एआई सिंचाई प्रणाली",
+        "ai-analyzing": "एआई सेंसर डेटा का विश्लेषण कर रहा है...",
+        "ai-reasoning": "वर्तमान स्थितियों के आधार पर बुद्धिमान सिंचाई निर्णय ले रहा है",
+        "manual-irrigation": "मैनुअल सिंचाई",
+        "manual-desc": "तत्काल शुरू करें या दैनिक पानी देना शेड्यूल करें",
+        "motor-log": "मोटर लॉग",
+        "motor-log-desc": "मैनुअल और स्वचालित रनटाइम देखें",
+        "notifications": "अधिसूचनाएं",
+        "notifications-desc": "अलर्ट और इतिहास देखें",
+        "immediate-irrigation": "तत्काल सिंचाई",
+        "timer-length": "टाइमर की लंबाई:",
+        "zone1": "क्षेत्र १",
+        "zone2": "क्षेत्र २",
+        "start": "शुरू करें",
+        "stop": "रोकें",
+        "pause": "रोकें",
+        "time-remaining": "शेष समय:",
+        "configuration": "कॉन्फ़िगरेशन",
+        "config-desc": "एपीआई बेस और स्थानीय नाम सेट करें",
+        "sample-endpoints": "नमूना एंडपॉइंट्स",
+        "quick-actions": "त्वरित क्रियाएं",
+        "home": "होम",
+        "refresh-sensors": "सेंसर रिफ्रेश करें",
+        "simulate-sensors": "अनुकरण करें",
+        "footer-text": "यह एक फ्रंटएंड प्रोटोटाइप है। उत्पादन से पहले बैकएंड URLs और सुरक्षित एंडपॉइंट्स कॉन्फ़िगर करें।",
+        "irrigation-needed": "मिट्टी की नमी के आधार पर सिंचाई की आवश्यकता",
+        "conditions-optimal": "मिट्टी की स्थिति अनुकूल है",
+        "rain-detected": "बारिश का पता चला - सिंचाई रोकी गई",
+        "water-level-low": "सिंचाई के लिए पानी की टंकी का स्तर बहुत कम है",
+        "ai-irrigation-started": "एआई ने सिंचाई शुरू की",
+        "minutes": "मिनट"
+      },
+      ne: {
+        "user-details": "प्रयोगकर्ता विवरणहरू",
+        "name": "नाम",
+        "enter-name": "आफ्नो पूरा नाम प्रविष्ट गर्नुहोस्",
+        "area-size": "क्षेत्रको आकार",
+        "enter-area-size": "क्षेत्रको आकार प्रविष्ट गर्नुहोस्",
+        "acres": "एकड",
+        "hectares": "हेक्टेयर",
+        "sq-meters": "वर्ग मिटर",
+        "geo-location": "भौगोलिक स्थान",
+        "enter-location": "निर्देशांक वा नक्सा स्थान प्रविष्ट गर्नुहोस्",
+        "mobile-number": "मोबाइल नम्बर",
+        "enter-mobile": "मोबाइल नम्बर प्रविष्ट गर्नुहोस्",
+        "address": "ठेगाना",
+        "enter-address": "आफ्नो पूरा ठेगाना प्रविष्ट गर्नुहोस्",
+        "cancel": "रद्द गर्नुहोस्",
+        "save": "सेभ गर्नुहोस्",
+        "subtitle": "स्मार्ट सिंचाई — जोरेथांग, दक्षिण सिक्किम",
+        "farmer-name": "किसानको नाम",
+        "enter-farmer-name": "किसानको नाम प्रविष्ट गर्नुहोस्",
+        "api-base": "एपीआई आधार",
+        "system-status": "प्रणाली स्थिति र सूचनाहरू",
+        "temperature": "तापक्रम",
+        "soil-moisture": "माटोको चिस्यान",
+        "humidity": "आर्द्रता",
+        "tank-level": "ट्यांक स्तर",
+        "no-active-timers": "कुनै सक्रिय टाइमर छैन",
+        "manual": "म्यानुअल",
+        "automatic": "स्वचालित",
+        "ai-irrigation-system": "एआई सिंचाई प्रणाली",
+        "ai-analyzing": "एआईले सेन्सर डाटाको विश्लेषण गरिरहेको छ...",
+        "ai-reasoning": "हालको अवस्थाको आधारमा बुद्धिमान सिंचाई निर्णयहरू गर्दै",
+        "manual-irrigation": "म्यानुअल सिंचाई",
+        "manual-desc": "तुरुन्त सुरु गर्नुहोस् वा दैनिक पानी दिने समयतालिका बनाउनुहोस्",
+        "motor-log": "मोटर लग",
+        "motor-log-desc": "म्यानुअल र स्वचालित रनटाइमहरू हेर्नुहोस्",
+        "notifications": "सूचनाहरू",
+        "notifications-desc": "अलर्ट र इतिहास हेर्नुहोस्",
+        "immediate-irrigation": "तत्काल सिंचाई",
+        "timer-length": "टाइमरको लम्बाइ:",
+        "zone1": "क्षेत्र १",
+        "zone2": "क्षेत्र २",
+        "start": "सुरु गर्नुहोस्",
+        "stop": "रोक्नुहोस्",
+        "pause": "रोक्नुहोस्",
+        "time-remaining": "बाँकी समय:",
+        "configuration": "कन्फिगरेसन",
+        "config-desc": "एपीआई आधार र स्थानीय नाम सेट गर्नुहोस्",
+        "sample-endpoints": "नमूना एन्डपोइन्टहरू",
+        "quick-actions": "द्रुत कार्यहरू",
+        "home": "गृह",
+        "refresh-sensors": "सेन्सरहरू रिफ्रेस गर्नुहोस्",
+        "simulate-sensors": "नक्कल गर्नुहोस्",
+        "footer-text": "यो एक फ्रन्टएन्ड प्रोटोटाइप हो। उत्पादन अघि ब्याकएन्ड URLs र सुरक्षित एन्डपोइन्टहरू कन्फिगर गर्नुहोस्।",
+        "irrigation-needed": "माटोको चिस्यानको आधारमा सिंचाई आवश्यक",
+        "conditions-optimal": "माटोको अवस्था अनुकूल छ",
+        "rain-detected": "वर्षा पत्ता लाग्यो - सिंचाई रोकियो",
+        "water-level-low": "सिंचाईका लागि पानीको ट्यांकको स्तर धेरै कम छ",
+        "ai-irrigation-started": "एआईले सिंचाई सुरु गर्यो",
+        "minutes": "मिनेट"
+      }
+    };
+
+    // AgroSmart AI-Enhanced Application
+    class AgroSmartAIApp {
+      constructor() {
+        this.data = {
+          sensorData: {
+            temperature: 25.5,
+            soilMoisture: 45,
+            humidity: 68,
+            waterLevel: 750,
+            rainDetected: false
+          },
+          timers: [],
+          userData: {
+            name: "",
+            areaSize: "",
+            areaUnit: "acres",
+            location: "",
+            mobile: "",
+            address: ""
+          },
+          mode: "manual", // manual or automatic
+          activeIrrigation: null,
+          aiDecisions: [],
+          currentLanguage: 'en'
+        };
+
+        this.intervals = {
+          sensorUpdate: null,
+          timerCheck: null,
+          countdown: null,
+          aiAnalysis: null
+        };
+
+        this.aiEngine = new IrrigationAI();
+        this.init();
+      }
+
+      init() {
+        this.bindEvents();
+        this.loadUserData();
+        this.startSensorUpdates();
+        this.startTimerChecking();
+        this.updateTimerStatus();
+        this.updateSensorDisplay();
+        this.updateLanguage();
+      }
+
+      bindEvents() {
+        // User modal events
+        document.getElementById('userProfileBtn').addEventListener('click', () => this.openUserModal());
+        document.getElementById('closeUserModal').addEventListener('click', () => this.closeUserModal());
+        document.getElementById('saveUserDetails').addEventListener('click', () => this.saveUserData());
+        document.getElementById('cancelUserDetails').addEventListener('click', () => this.closeUserModal());
+
+        // Language selector events
+        document.getElementById('languageBtn').addEventListener('click', (e) => {
+          e.stopPropagation();
+          document.getElementById('languageDropdown').classList.toggle('show');
+        });
+
+        document.querySelectorAll('.language-option').forEach(option => {
+          option.addEventListener('click', (e) => {
+            const lang = e.currentTarget.dataset.lang;
+            this.changeLanguage(lang);
+            document.getElementById('languageDropdown').classList.remove('show');
+          });
+        });
+
+        // Close language dropdown when clicking outside
+        document.addEventListener('click', () => {
+          document.getElementById('languageDropdown').classList.remove('show');
+        });
+
+        // Mode toggle
+        document.getElementById('modeToggle').addEventListener('change', (e) => this.toggleMode(e.target.checked));
+
+        // Timer length slider
+        document.getElementById('immediateDuration').addEventListener('input', (e) => {
+          document.getElementById('immediateVal').textContent = e.target.value + ' min';
+        });
+
+        // Irrigation control buttons
+        document.getElementById('startImmediate').addEventListener('click', () => this.startImmediateIrrigation());
+        document.getElementById('stopImmediate').addEventListener('click', () => this.stopIrrigation());
+        document.getElementById('pauseImmediate').addEventListener('click', () => this.pauseIrrigation());
+
+        // Quick action buttons
+        document.getElementById('btnRefreshSensors').addEventListener('click', () => this.fetchSensors());
+        document.getElementById('btnSimulateSensors').addEventListener('click', () => this.simulateSensors());
+
+        // Save config
+        document.getElementById('saveConfig').addEventListener('click', () => this.saveConfig());
+
+        // Modal overlay click to close
+        document.querySelectorAll('.modal-overlay').forEach(modal => {
+          modal.addEventListener('click', (e) => {
+            if (e.target === modal) {
+              modal.classList.remove('active');
+            }
+          });
+        });
+      }
+
+      // Language Management
+      changeLanguage(lang) {
+        this.data.currentLanguage = lang;
+        localStorage.setItem('agrosmart_language', lang);
+
+        // Update language selector UI
+        const langInfo = {
+          'en': { icon: '🇺🇸', text: 'English' },
+          'hi': { icon: '🇮🇳', text: 'हिंदी' },
+          'ne': { icon: '🇳🇵', text: 'नेपाली' }
+        };
+
+        document.getElementById('currentLangIcon').textContent = langInfo[lang].icon;
+        document.getElementById('currentLangText').textContent = langInfo[lang].text;
+
+        // Update active state
+        document.querySelectorAll('.language-option').forEach(opt => {
+          opt.classList.toggle('active', opt.dataset.lang === lang);
+        });
+
+        this.updateLanguage();
+      }
+
+      updateLanguage() {
+        const lang = this.data.currentLanguage;
+        const elements = document.querySelectorAll('[data-translate]');
+
+        elements.forEach(element => {
+          const key = element.getAttribute('data-translate');
+          if (translations[lang] && translations[lang][key]) {
+            element.textContent = translations[lang][key];
+          }
+        });
+
+        // Update placeholders
+        const placeholderElements = document.querySelectorAll('[data-translate-placeholder]');
+        placeholderElements.forEach(element => {
+          const key = element.getAttribute('data-translate-placeholder');
+          if (translations[lang] && translations[lang][key]) {
+            element.placeholder = translations[lang][key];
+          }
+        });
+      }
+
+      // User Management
+      openUserModal() {
+        document.getElementById('userModal').classList.add('active');
+        this.populateUserForm();
+      }
+
+      closeUserModal() {
+        document.getElementById('userModal').classList.remove('active');
+      }
+
+      populateUserForm() {
+        document.getElementById('userFullName').value = this.data.userData.name;
+        document.getElementById('userAreaSize').value = this.data.userData.areaSize;
+        document.getElementById('userAreaUnit').value = this.data.userData.areaUnit;
+        document.getElementById('userGeoLocation').value = this.data.userData.location;
+        document.getElementById('userMobileNumber').value = this.data.userData.mobile;
+        document.getElementById('userFullAddress').value = this.data.userData.address;
+      }
+
+      saveUserData() {
+        this.data.userData = {
+          name: document.getElementById('userFullName').value,
+          areaSize: document.getElementById('userAreaSize').value,
+          areaUnit: document.getElementById('userAreaUnit').value,
+          location: document.getElementById('userGeoLocation').value,
+          mobile: document.getElementById('userMobileNumber').value,
+          address: document.getElementById('userFullAddress').value
+        };
+
+        localStorage.setItem('agrosmartUserData', JSON.stringify(this.data.userData));
+
+        // Update farmer name if provided
+        if (this.data.userData.name) {
+          document.getElementById('farmerName').value = this.data.userData.name;
+        }
+
+        this.closeUserModal();
+        this.showNotification(translations[this.data.currentLanguage]['save'] + '!', 'success');
+      }
+
+      loadUserData() {
+        const savedData = localStorage.getItem('agrosmartUserData');
+        if (savedData) {
+          this.data.userData = JSON.parse(savedData);
+        }
+
+        const savedLang = localStorage.getItem('agrosmart_language');
+        if (savedLang) {
+          this.changeLanguage(savedLang);
+        }
+      }
+
+      saveConfig() {
+        const farmerName = document.getElementById('farmerName').value;
+        if (farmerName) {
+          this.data.userData.name = farmerName;
+          localStorage.setItem('agrosmartUserData', JSON.stringify(this.data.userData));
+        }
+
+        const apiBase = document.getElementById('apiBase').value;
+        if (apiBase) {
+          localStorage.setItem('agrosmart_api_base', apiBase);
+        }
+
+        this.showNotification(translations[this.data.currentLanguage]['save'] + '!', 'success');
+      }
+
+      // Mode Management
+      toggleMode(isAutomatic) {
+        this.data.mode = isAutomatic ? 'automatic' : 'manual';
+
+        const aiContainer = document.getElementById('aiStatusContainer');
+        const manualControls = document.getElementById('manualControls');
+
+        if (isAutomatic) {
+          aiContainer.style.display = 'block';
+          manualControls.style.opacity = '0.6';
+          this.startAIAnalysis();
+        } else {
+          aiContainer.style.display = 'none';
+          manualControls.style.opacity = '1';
+          this.stopAIAnalysis();
+        }
+
+        this.updateTimerStatus();
+      }
+
+      // AI Analysis
+      startAIAnalysis() {
+        if (this.intervals.aiAnalysis) {
+          clearInterval(this.intervals.aiAnalysis);
+        }
+
+        // Run AI analysis every 30 seconds when in automatic mode
+        this.intervals.aiAnalysis = setInterval(() => {
+          this.runAIAnalysis();
+        }, 30000);
+
+        // Run initial analysis
+        this.runAIAnalysis();
+      }
+
+      stopAIAnalysis() {
+        if (this.intervals.aiAnalysis) {
+          clearInterval(this.intervals.aiAnalysis);
+          this.intervals.aiAnalysis = null;
+        }
+      }
+
+      runAIAnalysis() {
+        if (this.data.mode !== 'automatic') return;
+
+        const decision = this.aiEngine.analyze(this.data.sensorData);
+        this.data.aiDecisions.unshift({
+          timestamp: new Date(),
+          decision: decision,
+          sensorData: {...this.data.sensorData}
+        });
+
+        // Keep only last 10 decisions
+        this.data.aiDecisions = this.data.aiDecisions.slice(0, 10);
+
+        this.updateAIDisplay(decision);
+
+        // Execute AI decision if irrigation is needed
+        if (decision.shouldIrrigate && !this.data.activeIrrigation) {
+          this.startAIIrrigation(decision.duration);
+        }
+      }
+
+      updateAIDisplay(decision) {
+        const lang = this.data.currentLanguage;
+        const decisionText = document.getElementById('aiDecisionText');
+        const reasoningText = document.getElementById('aiReasoningText');
+
+        if (decision.shouldIrrigate) {
+          decisionText.textContent = `${translations[lang]['ai-irrigation-started']} ${decision.duration} ${translations[lang]['minutes']}`;
+          decisionText.style.background = 'rgba(76,175,80,0.2)';
+          decisionText.style.borderColor = 'var(--accent)';
+          decisionText.style.color = 'var(--primary-green)';
+        } else {
+          decisionText.textContent = decision.reason;
+          decisionText.style.background = 'var(--light-green)';
+          decisionText.style.borderColor = 'var(--card-border)';
+          decisionText.style.color = 'var(--muted)';
+        }
+
+        reasoningText.textContent = decision.reasoning;
+      }
+
+      startAIIrrigation(duration) {
+        this.data.activeIrrigation = {
+          type: 'ai_automatic',
+          startTime: new Date(),
+          duration: duration,
+          remaining: duration * 60
+        };
+
+        this.updateTimerStatus();
+        this.showNotification(`${translations[this.data.currentLanguage]['ai-irrigation-started']} ${duration} ${translations[this.data.currentLanguage]['minutes']}`, 'success');
+        this.startCountdown();
+      }
+
+      // Immediate Irrigation
+      startImmediateIrrigation() {
+        const duration = parseInt(document.getElementById('immediateDuration').value);
+
+        this.data.activeIrrigation = {
+          type: 'immediate',
+          startTime: new Date(),
+          duration: duration,
+          remaining: duration * 60
+        };
+
+        this.updateTimerStatus();
+        this.showNotification(`${translations[this.data.currentLanguage]['start']} ${duration} ${translations[this.data.currentLanguage]['minutes']}`, 'success');
+        this.startCountdown();
+      }
+
+      startCountdown() {
+        const countdownDisplay = document.getElementById('immediateCountdown');
+        const countdownTime = document.getElementById('countdownTime');
+
+        countdownDisplay.classList.remove('hide');
+
+        this.intervals.countdown = setInterval(() => {
+          if (this.data.activeIrrigation && this.data.activeIrrigation.remaining > 0) {
+            this.data.activeIrrigation.remaining--;
+
+            const minutes = Math.floor(this.data.activeIrrigation.remaining / 60);
+            const seconds = this.data.activeIrrigation.remaining % 60;
+
+            countdownTime.textContent = `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+
+            // Update timer notification
+            const timerNotif = document.getElementById('timerNotification');
+            timerNotif.textContent = `${translations[this.data.currentLanguage]['time-remaining']} ${minutes}:${seconds.toString().padStart(2, '0')}`;
+          } else {
+            this.stopIrrigation(true); // Auto-complete
+          }
+        }, 1000);
+      }
+
+      stopIrrigation(completed = false) {
+        if (this.intervals.countdown) {
+          clearInterval(this.intervals.countdown);
+          this.intervals.countdown = null;
+        }
+
+        this.data.activeIrrigation = null;
+        document.getElementById('immediateCountdown').classList.add('hide');
+
+        this.updateTimerStatus();
+
+        const message = completed ? 
+          translations[this.data.currentLanguage]['conditions-optimal'] : 
+          translations[this.data.currentLanguage]['stop'];
+        this.showNotification(message, completed ? 'success' : 'warning');
+      }
+
+      pauseIrrigation() {
+        this.showNotification(translations[this.data.currentLanguage]['pause'], 'warning');
+      }
+
+      // Sensor Updates
+      startSensorUpdates() {
+        this.intervals.sensorUpdate = setInterval(() => {
+          this.simulateSensors();
+          this.updateSensorDisplay();
+        }, 30000); // Update every 30 seconds
+      }
+
+      fetchSensors() {
+        // In a real implementation, this would fetch from your API
+        this.simulateSensors();
+        this.showNotification('Sensors refreshed', 'success');
+      }
+
+      simulateSensors() {
+        // Simulate realistic sensor data for hill region
+        this.data.sensorData = {
+          temperature: this.randomInRange(15, 35, this.data.sensorData.temperature, 2),
+          soilMoisture: this.randomInRange(20, 80, this.data.sensorData.soilMoisture, 5),
+          humidity: this.randomInRange(40, 90, this.data.sensorData.humidity, 3),
+          waterLevel: this.randomInRange(100, 1000, this.data.sensorData.waterLevel, 20),
+          rainDetected: Math.random() > 0.9 // 10% chance of rain
+        };
+      }
+
+      updateSensorDisplay() {
+        document.getElementById('tempNotif').textContent = `${this.data.sensorData.temperature.toFixed(1)}°C`;
+        document.getElementById('soilNotif').textContent = `${this.data.sensorData.soilMoisture}%`;
+        document.getElementById('humidityNotif').textContent = `${this.data.sensorData.humidity}%`;
+        document.getElementById('tankNotif').textContent = `${this.data.sensorData.waterLevel}L`;
+      }
+
+      randomInRange(min, max, current, maxChange) {
+        const change = (Math.random() - 0.5) * 2 * maxChange;
+        const newValue = current + change;
+        return Math.max(min, Math.min(max, Math.round(newValue * 10) / 10));
+      }
+
+      // Timer Status
+      startTimerChecking() {
+        this.intervals.timerCheck = setInterval(() => {
+          this.updateTimerStatus();
+        }, 60000); // Check every minute
+      }
+
+      updateTimerStatus() {
+        const statusElement = document.getElementById('timerNotification');
+        const lang = this.data.currentLanguage;
+
+        if (this.data.activeIrrigation) {
+          const remainingMinutes = Math.floor(this.data.activeIrrigation.remaining / 60);
+          const remainingSeconds = this.data.activeIrrigation.remaining % 60;
+          statusElement.textContent = `${translations[lang]['time-remaining']} ${remainingMinutes}:${remainingSeconds.toString().padStart(2, '0')}`;
+        } else {
+          statusElement.textContent = translations[lang]['no-active-timers'];
+        }
+      }
+
+      // Utility Functions
+      showNotification(message, type = 'info') {
+        const notification = document.createElement('div');
+        notification.className = `notification toast-${type}`;
+        notification.textContent = message;
+        notification.style.cssText = `
+          position: fixed;
+          top: 20px;
+          right: 20px;
+          padding: 15px 20px;
+          background: ${type === 'success' ? '#4caf50' : type === 'warning' ? '#ff9800' : '#2196F3'};
+          color: white;
+          border-radius: 8px;
+          box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+          z-index: 10000;
+          animation: slideInRight 0.3s ease;
+        `;
+
+        document.body.appendChild(notification);
+
+        setTimeout(() => {
+          notification.style.animation = 'slideOutRight 0.3s ease';
+          setTimeout(() => {
+            if (document.body.contains(notification)) {
+              document.body.removeChild(notification);
+            }
+          }, 300);
+        }, 3000);
+      }
+    }
+
+    // AI Engine for Irrigation Decisions
+    class IrrigationAI {
+      constructor() {
+        this.thresholds = {
+          soilMoistureMin: 30,
+          soilMoistureCritical: 20,
+          waterLevelMin: 200,
+          temperatureMax: 35,
+          humidityMin: 40
+        };
+
+        this.irrigationDurations = {
+          light: 10,    // 10 minutes
+          moderate: 20, // 20 minutes
+          heavy: 30     // 30 minutes
+        };
+      }
+
+      analyze(sensorData) {
+        const decision = {
+          shouldIrrigate: false,
+          duration: 0,
+          reason: '',
+          reasoning: '',
+          urgency: 'low'
+        };
+
+        // Check if rain is detected
+        if (sensorData.rainDetected) {
+          decision.reason = 'Rain detected - irrigation paused';
+          decision.reasoning = 'Natural irrigation is occurring, manual irrigation not needed';
+          return decision;
+        }
+
+        // Check water level
+        if (sensorData.waterLevel < this.thresholds.waterLevelMin) {
+          decision.reason = 'Water tank level too low for irrigation';
+          decision.reasoning = 'Insufficient water supply in tank for safe irrigation operation';
+          return decision;
+        }
+
+        // Analyze soil moisture
+        if (sensorData.soilMoisture <= this.thresholds.soilMoistureCritical) {
+          decision.shouldIrrigate = true;
+          decision.duration = this.irrigationDurations.heavy;
+          decision.reason = 'Critical: Immediate irrigation needed';
+          decision.reasoning = `Soil moisture at critical level (${sensorData.soilMoisture}%). Extended irrigation recommended.`;
+          decision.urgency = 'critical';
+        } else if (sensorData.soilMoisture <= this.thresholds.soilMoistureMin) {
+          // Consider environmental factors for moderate irrigation
+          let duration = this.irrigationDurations.moderate;
+
+          // Increase duration if it's hot and dry
+          if (sensorData.temperature > this.thresholds.temperatureMax && 
+              sensorData.humidity < this.thresholds.humidityMin) {
+            duration = this.irrigationDurations.heavy;
+            decision.reasoning = `Low soil moisture (${sensorData.soilMoisture}%) combined with high temperature (${sensorData.temperature}°C) and low humidity (${sensorData.humidity}%). Extended irrigation needed.`;
+          } else {
+            decision.reasoning = `Soil moisture below optimal level (${sensorData.soilMoisture}%). Moderate irrigation recommended.`;
+          }
+
+          decision.shouldIrrigate = true;
+          decision.duration = duration;
+          decision.reason = 'Irrigation needed based on soil moisture';
+          decision.urgency = 'moderate';
+        } else {
+          decision.reason = 'Soil conditions are optimal';
+          decision.reasoning = `Soil moisture level is adequate (${sensorData.soilMoisture}%). No irrigation required at this time.`;
+        }
+
+        return decision;
+      }
+    }
+
+    // Add CSS for toast animations
+    const style = document.createElement('style');
+    style.textContent = `
+      @keyframes slideInRight {
+        from { transform: translateX(100%); opacity: 0; }
+        to { transform: translateX(0); opacity: 1; }
+      }
+      @keyframes slideOutRight {
+        from { transform: translateX(0); opacity: 1; }
+        to { transform: translateX(100%); opacity: 0; }
+      }
+    `;
+    document.head.appendChild(style);
+
+    // Initialize the application
+    const agroSmartApp = new AgroSmartAIApp();
+  </script>
+</body>
+</html>
