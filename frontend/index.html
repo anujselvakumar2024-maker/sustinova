@@ -1,0 +1,1217 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>AgroSmart — AI-Powered Smart Irrigation with ESP32</title>
+  <style>
+    :root{
+      --bg: #f1f8e9; 
+      --card: #ffffff; 
+      --accent: #4caf50; 
+      --muted: #666666;
+      --glass: rgba(76,175,80,0.1); 
+      --danger: #f44336; 
+      --success: #4caf50;
+      --card-border: rgba(76,175,80,0.2);
+      --primary-green: #2e7d32;
+      --light-green: #c8e6c9;
+      --dark-green: #1b5e20;
+      --background-green: #e8f5e8;
+      --warning: #ff9800;
+    }
+    *{box-sizing:border-box;font-family:Inter,ui-sans-serif,system-ui,Segoe UI,Roboto,Arial}
+    body{margin:0;background:linear-gradient(135deg,#e8f5e8 0%,#f1f8e9 100%);color:#2e7d32}
+    .app{max-width:1100px;margin:18px auto;padding:18px}
+    header{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px}
+    .brand{display:flex;gap:12px;align-items:center;cursor:pointer}
+    .logo{width:56px;height:56px;border-radius:10px;background:linear-gradient(135deg,var(--accent),#66bb6a);display:flex;align-items:center;justify-content:center;color:#fff;font-weight:800}
+    .title{font-size:18px;font-weight:700}
+    .subtitle{font-size:12px;color:var(--muted)}
+    .controls{display:flex;gap:10px;align-items:center}
+    input[type=text],select{background:var(--glass);border:1px solid var(--card-border);padding:8px 10px;border-radius:8px;color:inherit}
+    button{background:var(--accent);border:none;padding:8px 12px;border-radius:8px;color:#fff;font-weight:600;cursor:pointer;transition:all 0.3s ease}
+    button:hover{background:var(--primary-green);transform:translateY(-1px)}
+    .grid{display:grid;grid-template-columns:1fr 340px;gap:16px}
+    .card{background:var(--card);padding:14px;border-radius:12px;border:1px solid var(--card-border);box-shadow:0 2px 8px rgba(76,175,80,0.1)}
+    .hide{display:none}
+
+    /* Connection Status */
+    .connection-status {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 12px;
+      color: var(--muted);
+    }
+
+    .status-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: var(--danger);
+    }
+
+    .status-dot.connected {
+      background: var(--success);
+      animation: pulse-dot 2s infinite;
+    }
+
+    @keyframes pulse-dot {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.5; }
+    }
+
+    /* Real-time data indicators */
+    .sensor-data-item {
+      text-align: center;
+      padding: 12px;
+      background: var(--light-green);
+      border-radius: 8px;
+      border: 1px solid var(--card-border);
+      transition: all 0.3s ease;
+      position: relative;
+    }
+
+    .sensor-data-item.updating {
+      background: rgba(76,175,80,0.2);
+      border-color: var(--accent);
+      animation: pulse-update 1s ease;
+    }
+
+    @keyframes pulse-update {
+      0%, 100% { transform: scale(1); }
+      50% { transform: scale(1.02); }
+    }
+
+    .sensor-data-item:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 4px 8px rgba(76,175,80,0.2);
+    }
+
+    .sensor-data-label {
+      color: var(--muted);
+      font-size: 12px;
+      margin-bottom: 4px;
+    }
+
+    .sensor-data-value {
+      font-weight: 700;
+      color: var(--primary-green);
+      font-size: 16px;
+    }
+
+    /* Last updated indicator */
+    .last-updated {
+      font-size: 10px;
+      color: var(--muted);
+      text-align: center;
+      margin-top: 8px;
+    }
+
+    /* Mode Toggle */
+    .mode-toggle-section {
+      text-align: center;
+      margin: 20px 0;
+    }
+
+    .mode-toggle-container {
+      display: inline-block;
+      background: var(--card);
+      border-radius: 50px;
+      padding: 4px;
+      box-shadow: 0 2px 8px rgba(76,175,80,0.15);
+      border: 2px solid var(--card-border);
+    }
+
+    .toggle-switch {
+      position: relative;
+      display: inline-block;
+      width: 240px;
+      height: 48px;
+    }
+
+    .toggle-switch input {
+      opacity: 0;
+      width: 0;
+      height: 0;
+    }
+
+    .slider {
+      position: absolute;
+      cursor: pointer;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: linear-gradient(135deg, var(--primary-green), var(--accent));
+      transition: 0.4s;
+      border-radius: 24px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 16px;
+      color: white;
+      font-weight: 700;
+      font-size: 14px;
+      box-shadow: inset 0 2px 4px rgba(0,0,0,0.1);
+    }
+
+    .slider::before {
+      position: absolute;
+      content: "";
+      height: 40px;
+      width: 112px;
+      left: 4px;
+      bottom: 4px;
+      background: white;
+      transition: 0.4s;
+      border-radius: 20px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+      z-index: 2;
+    }
+
+    input:checked + .slider {
+      background: linear-gradient(135deg, var(--accent), #81c784);
+    }
+
+    input:checked + .slider::before {
+      transform: translateX(120px);
+    }
+
+    .toggle-text-manual,
+    .toggle-text-auto {
+      z-index: 3;
+      position: relative;
+      transition: color 0.4s;
+      text-shadow: 0 1px 2px rgba(0,0,0,0.1);
+    }
+
+    input:not(:checked) + .slider .toggle-text-manual {
+      color: var(--primary-green);
+      font-weight: 800;
+    }
+
+    input:checked + .slider .toggle-text-auto {
+      color: var(--primary-green);
+      font-weight: 800;
+    }
+
+    /* AI Status Display */
+    .ai-status-container {
+      background: linear-gradient(135deg, var(--card), #f8fffe);
+      border: 2px solid var(--accent);
+      border-radius: 12px;
+      padding: 16px;
+      margin: 16px 0;
+      box-shadow: 0 4px 12px rgba(76,175,80,0.15);
+    }
+
+    .ai-status-header {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 12px;
+    }
+
+    .ai-status-icon {
+      width: 32px;
+      height: 32px;
+      background: var(--accent);
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: white;
+      font-size: 16px;
+      animation: pulse-ai 2s infinite;
+    }
+
+    @keyframes pulse-ai {
+      0%, 100% { transform: scale(1); opacity: 1; }
+      50% { transform: scale(1.1); opacity: 0.8; }
+    }
+
+    .ai-status-title {
+      font-weight: 700;
+      color: var(--primary-green);
+      font-size: 16px;
+    }
+
+    .ai-decision {
+      background: var(--light-green);
+      padding: 12px;
+      border-radius: 8px;
+      border: 1px solid var(--accent);
+      color: var(--primary-green);
+      font-weight: 600;
+      text-align: center;
+      margin-bottom: 10px;
+    }
+
+    .ai-reasoning {
+      font-size: 14px;
+      color: var(--muted);
+      text-align: center;
+      font-style: italic;
+    }
+
+    /* Bottom Action Buttons */
+    .bottom-actions {
+      position: fixed;
+      bottom: 20px;
+      left: 50%;
+      transform: translateX(-50%);
+      display: flex;
+      gap: 12px;
+      background: var(--card);
+      padding: 12px 20px;
+      border-radius: 25px;
+      box-shadow: 0 6px 20px rgba(76,175,80,0.3);
+      border: 2px solid var(--accent);
+      z-index: 100;
+    }
+
+    .action-btn {
+      width: 60px;
+      height: 60px;
+      border-radius: 50%;
+      border: 2px solid var(--accent);
+      background: var(--light-green);
+      color: var(--primary-green);
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 24px;
+      transition: all 0.3s ease;
+      flex-direction: column;
+      gap: 2px;
+      font-size: 16px;
+      font-weight: 600;
+    }
+
+    .action-btn:hover {
+      background: var(--accent);
+      color: white;
+      transform: translateY(-3px);
+      box-shadow: 0 6px 12px rgba(76,175,80,0.4);
+    }
+
+    .action-btn .icon {
+      font-size: 20px;
+      margin-bottom: 2px;
+    }
+
+    .action-btn .label {
+      font-size: 8px;
+      font-weight: 600;
+      text-align: center;
+    }
+
+    /* Manual Sub-Toggle */
+    .manual-sub-toggle-section {
+      text-align: center;
+      margin: 20px 0;
+      display: none;
+    }
+
+    .manual-sub-toggle-section.show {
+      display: block;
+    }
+
+    /* Notification section */
+    .notification-section {
+      background: var(--card);
+      border: 1px solid var(--card-border);
+      border-radius: 12px;
+      padding: 16px;
+      margin-bottom: 16px;
+      box-shadow: 0 2px 8px rgba(76,175,80,0.1);
+    }
+
+    .notification-title {
+      font-weight: 700;
+      color: var(--primary-green);
+      margin-bottom: 12px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .sensor-data-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+      gap: 12px;
+      margin-bottom: 12px;
+    }
+
+    /* Modal styles */
+    .modal-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(46,125,50,0.6);
+      display: none;
+      justify-content: center;
+      align-items: center;
+      z-index: 1000;
+      backdrop-filter: blur(4px);
+    }
+    .modal-overlay.active {
+      display: flex;
+    }
+    .modal {
+      background: var(--card);
+      border-radius: 12px;
+      border: 1px solid var(--card-border);
+      width: 90%;
+      max-width: 500px;
+      max-height: 90vh;
+      overflow: auto;
+      box-shadow: 0 8px 32px rgba(76,175,80,0.3);
+    }
+    .modal-header {
+      padding: 20px;
+      border-bottom: 1px solid var(--card-border);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      background: var(--light-green);
+    }
+    .modal-title {
+      font-size: 18px;
+      font-weight: 700;
+      color: var(--primary-green);
+    }
+    .close-btn {
+      background: none;
+      border: none;
+      color: var(--muted);
+      font-size: 20px;
+      cursor: pointer;
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.3s ease;
+    }
+    .close-btn:hover {
+      background: var(--danger);
+      color: #fff;
+    }
+    .modal-body {
+      padding: 20px;
+    }
+    .modal-footer {
+      padding: 20px;
+      border-top: 1px solid var(--card-border);
+      display: flex;
+      justify-content: flex-end;
+      gap: 12px;
+      background: var(--light-green);
+    }
+    .log-item{padding:8px;border-radius:8px;border:1px solid var(--card-border);margin-bottom:8px;background:var(--card)}
+    .btn-ghost{background:transparent;border:1px solid var(--card-border);padding:8px;border-radius:8px;color:var(--muted);cursor:pointer;transition:all 0.3s ease}
+    .btn-ghost:hover{background:var(--light-green);color:var(--primary-green)}
+    .btn-primary {
+      background: var(--accent);
+      color: #fff;
+    }
+    .muted{color:var(--muted);font-size:13px}
+
+    /* Manual Controls */
+    .manual-controls-section {
+      background: var(--card);
+      border: 1px solid var(--card-border);
+      border-radius: 12px;
+      padding: 16px;
+      margin-bottom: 16px;
+      box-shadow: 0 2px 8px rgba(76,175,80,0.1);
+    }
+
+    input[type=range]{width:100%}
+    input[type=number]{width:90px;padding:6px;border-radius:6px;border:1px solid var(--card-border);background:var(--card);color:inherit}
+    select{background:var(--glass);border:1px solid var(--card-border);padding:8px 10px;border-radius:8px;color:inherit}
+
+    /* Responsive */
+    @media(max-width:900px){
+      .grid{grid-template-columns:1fr}
+      .bottom-actions{
+        bottom: 10px;
+        gap: 8px;
+        padding: 8px 16px;
+      }
+      .action-btn{
+        width: 50px;
+        height: 50px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="app">
+    <!-- Motor Log Modal -->
+    <div class="modal-overlay" id="motorLogModal">
+      <div class="modal">
+        <div class="modal-header">
+          <div class="modal-title">Motor Log & ESP32 Status</div>
+          <button class="close-btn" id="closeMotorLogModal">×</button>
+        </div>
+        <div class="modal-body">
+          <div id="motorLogContent">
+            <div class="log-item">
+              <strong>Loading irrigation history...</strong><br>
+              <small class="muted">Please wait while we fetch the data from the server</small>
+            </div>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button class="btn-ghost" id="refreshMotorLog">Refresh</button>
+          <button class="btn-primary" id="closeMotorLogBtn">Close</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Notifications Modal -->
+    <div class="modal-overlay" id="notificationsModal">
+      <div class="modal">
+        <div class="modal-header">
+          <div class="modal-title">System Notifications</div>
+          <button class="close-btn" id="closeNotificationsModal">×</button>
+        </div>
+        <div class="modal-body">
+          <div id="notificationsContent">
+            <div class="log-item">
+              <strong>🌧️ Rain Detection</strong><br>
+              <small class="muted">System paused irrigation due to rainfall detected</small>
+            </div>
+            <div class="log-item">
+              <strong>🤖 AI Irrigation</strong><br>
+              <small class="muted">AI automatically started irrigation based on soil conditions</small>
+            </div>
+            <div class="log-item">
+              <strong>📡 ESP32 Connected</strong><br>
+              <small class="muted">Hardware sensor successfully connected and sending data</small>
+            </div>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button class="btn-ghost" id="clearNotifications">Clear All</button>
+          <button class="btn-primary" id="closeNotificationsBtn">Close</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- AI Chatbot Modal -->
+    <div class="modal-overlay" id="chatbotModal" style="backdrop-filter: blur(4px);">
+      <div class="modal" style="height: 600px; max-height: 80vh; display: flex; flex-direction: column;">
+        <div class="modal-header" style="background: linear-gradient(135deg, var(--accent), #81c784); color: white;">
+          <div class="modal-title" style="color: white; display: flex; align-items: center; gap: 10px;">
+            <span>🤖</span> <span>Farming Assistant</span>
+          </div>
+          <button class="close-btn" id="closeChatbot" style="color: white;">×</button>
+        </div>
+        <div style="flex: 1; padding: 20px; overflow-y: auto; background: linear-gradient(135deg, #f8fff8, var(--background-green));" id="chatbotMessages">
+          <div style="margin-bottom: 16px; display: flex; align-items: flex-start; gap: 10px;">
+            <div style="width: 32px; height: 32px; border-radius: 50%; background: var(--accent); color: white; display: flex; align-items: center; justify-content: center; font-size: 16px;">🌱</div>
+            <div style="background: var(--light-green); padding: 12px 16px; border-radius: 16px; border-left: 4px solid var(--accent);">
+              Hello! I'm your AI farming assistant. I can help you with irrigation, crop management, pest control, soil health, and farming techniques. Your ESP32 sensors provide real-time data for optimal farming decisions!
+            </div>
+          </div>
+        </div>
+        <div style="padding: 16px 20px; background: var(--card); border-top: 1px solid var(--card-border); display: flex; gap: 12px; align-items: center;">
+          <input type="text" id="chatbotInput" placeholder="Ask me about farming, irrigation, crops..." style="flex: 1; padding: 12px 16px; border: 2px solid var(--card-border); border-radius: 25px; background: var(--background-green); color: var(--primary-green); font-size: 14px; outline: none;">
+          <button id="chatbotSend" style="width: 44px; height: 44px; border-radius: 50%; background: var(--accent); border: none; color: white; cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 18px;">▶</button>
+        </div>
+      </div>
+    </div>
+
+    <header>
+      <div class="brand">
+        <div class="logo">AS</div>
+        <div>
+          <div class="title">AgroSmart ESP32</div>
+          <div class="subtitle">AI-Powered Smart Irrigation — Live Hardware Integration</div>
+        </div>
+      </div>
+      <div class="controls">
+        <div class="connection-status">
+          <div class="status-dot" id="connectionDot"></div>
+          <span id="connectionStatus">Connecting to ESP32...</span>
+        </div>
+        <label class="muted">API Base</label>
+        <input id="apiBase" type="text" placeholder="http://localhost:5000" style="width:180px" />
+        <button id="saveConfig">Save</button>
+      </div>
+    </header>
+
+    <div class="grid">
+      <!-- MAIN -->
+      <main>
+        <!-- Real-time Sensor Data -->
+        <section class="notification-section">
+          <h2 class="notification-title">
+            <span>📡</span> 
+            <span>Live ESP32 Sensor Data</span>
+          </h2>
+
+          <div class="sensor-data-grid">
+            <div class="sensor-data-item" id="tempSensor">
+              <div class="sensor-data-label">Temperature</div>
+              <div class="sensor-data-value" id="tempNotif">--°C</div>
+            </div>
+            <div class="sensor-data-item" id="soilSensor">
+              <div class="sensor-data-label">Soil Moisture</div>
+              <div class="sensor-data-value" id="soilNotif">--%</div>
+            </div>
+            <div class="sensor-data-item" id="humiditySensor">
+              <div class="sensor-data-label">Humidity</div>
+              <div class="sensor-data-value" id="humidityNotif">--%</div>
+            </div>
+            <div class="sensor-data-item" id="tankSensor">
+              <div class="sensor-data-label">Tank Level</div>
+              <div class="sensor-data-value" id="tankNotif">--L</div>
+            </div>
+          </div>
+
+          <div class="last-updated">
+            Last updated: <span id="lastUpdated">Never</span>
+          </div>
+
+          <div id="timerNotification" style="background:rgba(76,175,80,0.1);padding:12px;border-radius:8px;border:1px solid rgba(76,175,80,0.2);color:var(--primary-green);font-weight:600;text-align:center">
+            No active irrigation
+          </div>
+        </section>
+
+        <!-- Mode Toggle -->
+        <section class="mode-toggle-section">
+          <div class="mode-toggle-container">
+            <label class="toggle-switch">
+              <input type="checkbox" id="modeToggle">
+              <span class="slider">
+                <span class="toggle-text-manual">Manual</span>
+                <span class="toggle-text-auto">Automatic</span>
+              </span>
+            </label>
+          </div>
+        </section>
+
+        <!-- AI Status Display (Only shown in Automatic mode) -->
+        <section class="ai-status-container" id="aiStatusContainer" style="display: none;">
+          <div class="ai-status-header">
+            <div class="ai-status-icon">🤖</div>
+            <div class="ai-status-title">AI Irrigation System</div>
+          </div>
+          <div class="ai-decision" id="aiDecisionText">Analyzing sensor data...</div>
+          <div class="ai-reasoning" id="aiReasoningText">AI is processing real-time ESP32 sensor data for irrigation decisions</div>
+        </section>
+
+        <!-- Manual Controls (Only shown in Manual mode) -->
+        <section class="manual-controls-section" id="manualControlsSection">
+          <h3>Manual ESP32 Pump Control</h3>
+          <div style="margin-top:10px">
+            <div style="display:flex;align-items:center;gap:12px;margin-bottom:16px">
+              <span>Duration:</span>
+              <input id="immediateDuration" type="range" min="1" max="30" value="10" style="flex:1" />
+              <div id="immediateVal" style="width:60px;text-align:right;font-weight:700;color:var(--primary-green)">10 min</div>
+            </div>
+            <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+              <select id="immediateZone">
+                <option value="zone1">Zone 1</option>
+                <option value="zone2">Zone 2</option>
+              </select>
+              <button id="startImmediate">Start Pump</button>
+              <button id="stopImmediate">Stop Pump</button>
+            </div>
+            <div style="margin-top:12px;padding:8px;background:var(--light-green);border-radius:8px;font-size:12px;color:var(--muted)">
+              Commands are sent directly to your ESP32 hardware via WiFi
+            </div>
+          </div>
+        </section>
+      </main>
+
+      <!-- SIDEBAR -->
+      <aside>
+        <div class="card">
+          <div style="display:flex;justify-content:space-between;align-items:center">
+            <div>
+              <strong>ESP32 Hardware Status</strong>
+              <div class="muted">Real-time sensor monitoring</div>
+            </div>
+          </div>
+          <div style="margin-top:10px">
+            <div class="muted">Hardware IP: <span id="esp32IP">Not connected</span></div>
+            <div class="muted">Pump Status: <span id="pumpStatus">OFF</span></div>
+            <div style="height:8px"></div>
+            <div class="muted">Data refresh: Every 10 seconds</div>
+            <div class="muted">AI analysis: Real-time in automatic mode</div>
+          </div>
+        </div>
+        <div style="height:12px"></div>
+        <div class="card">
+          <div style="font-weight:700">Hardware Controls</div>
+          <div style="display:flex;gap:8px;margin-top:10px;flex-wrap:wrap">
+            <button id="btnRefreshSensors" class="btn-ghost">Force Refresh</button>
+            <button id="btnTestConnection" class="btn-ghost">Test ESP32</button>
+          </div>
+        </div>
+      </aside>
+    </div>
+
+    <!-- Bottom Action Buttons -->
+    <div class="bottom-actions">
+      <button class="action-btn" id="motorLogBtn">
+        <div class="icon">📊</div>
+        <div class="label">MOTOR</div>
+      </button>
+      <button class="action-btn" id="notificationsBtn">
+        <div class="icon">🔔</div>
+        <div class="label">ALERTS</div>
+      </button>
+      <button class="action-btn" id="aiChatBtn">
+        <div class="icon">🤖</div>
+        <div class="label">AI CHAT</div>
+      </button>
+    </div>
+
+    <footer style="padding-bottom:100px; margin-top:18px;color:var(--muted);font-size:13px;text-align:center">
+      ESP32 Hardware Integration Active — Real-time sensor data and pump control
+    </footer>
+  </div>
+
+  <script>
+    class AgroSmartESP32App {
+      constructor() {
+        this.data = {
+          mode: "manual",
+          sensorData: {
+            temperature: null,
+            soil_moisture: null,
+            humidity: null,
+            water_level: null,
+            rain_detected: false,
+            pump_running: false,
+            esp32_ip: null
+          },
+          apiBase: 'http://localhost:5000',
+          connected: false,
+          lastUpdated: null
+        };
+
+        this.intervals = {
+          sensorFetch: null,
+          aiCheck: null
+        };
+
+        this.init();
+      }
+
+      init() {
+        this.bindEvents();
+        this.loadConfig();
+        this.startSensorFetching();
+        this.updateModeDisplay();
+      }
+
+      bindEvents() {
+        // Mode toggle
+        document.getElementById('modeToggle').addEventListener('change', (e) => {
+          this.data.mode = e.target.checked ? 'automatic' : 'manual';
+          this.updateModeDisplay();
+
+          if (this.data.mode === 'automatic') {
+            this.startAIMonitoring();
+          } else {
+            this.stopAIMonitoring();
+          }
+        });
+
+        // Bottom action buttons
+        document.getElementById('motorLogBtn').addEventListener('click', () => {
+          this.openMotorLog();
+        });
+
+        document.getElementById('notificationsBtn').addEventListener('click', () => {
+          document.getElementById('notificationsModal').classList.add('active');
+        });
+
+        document.getElementById('aiChatBtn').addEventListener('click', () => {
+          document.getElementById('chatbotModal').classList.add('active');
+        });
+
+        // Modal close events
+        document.getElementById('closeMotorLogModal').addEventListener('click', () => {
+          document.getElementById('motorLogModal').classList.remove('active');
+        });
+
+        document.getElementById('closeNotificationsModal').addEventListener('click', () => {
+          document.getElementById('notificationsModal').classList.remove('active');
+        });
+
+        document.getElementById('closeChatbot').addEventListener('click', () => {
+          document.getElementById('chatbotModal').classList.remove('active');
+        });
+
+        // Close buttons
+        document.getElementById('closeMotorLogBtn').addEventListener('click', () => {
+          document.getElementById('motorLogModal').classList.remove('active');
+        });
+
+        document.getElementById('closeNotificationsBtn').addEventListener('click', () => {
+          document.getElementById('notificationsModal').classList.remove('active');
+        });
+
+        // Chatbot
+        document.getElementById('chatbotSend').addEventListener('click', () => {
+          this.sendChatMessage();
+        });
+
+        document.getElementById('chatbotInput').addEventListener('keypress', (e) => {
+          if (e.key === 'Enter') {
+            this.sendChatMessage();
+          }
+        });
+
+        // Timer controls
+        document.getElementById('immediateDuration').addEventListener('input', (e) => {
+          document.getElementById('immediateVal').textContent = e.target.value + ' min';
+        });
+
+        document.getElementById('startImmediate').addEventListener('click', () => {
+          this.startManualIrrigation();
+        });
+
+        document.getElementById('stopImmediate').addEventListener('click', () => {
+          this.stopManualIrrigation();
+        });
+
+        // Config
+        document.getElementById('saveConfig').addEventListener('click', () => {
+          this.saveConfig();
+        });
+
+        document.getElementById('btnRefreshSensors').addEventListener('click', () => {
+          this.fetchSensors();
+        });
+
+        document.getElementById('btnTestConnection').addEventListener('click', () => {
+          this.testConnection();
+        });
+
+        // Modal overlay clicks
+        document.querySelectorAll('.modal-overlay').forEach(modal => {
+          modal.addEventListener('click', (e) => {
+            if (e.target === modal) {
+              modal.classList.remove('active');
+            }
+          });
+        });
+      }
+
+      loadConfig() {
+        const savedApiBase = localStorage.getItem('agrosmart_api_base');
+        if (savedApiBase) {
+          this.data.apiBase = savedApiBase;
+          document.getElementById('apiBase').value = savedApiBase;
+        }
+      }
+
+      saveConfig() {
+        const apiBase = document.getElementById('apiBase').value;
+        if (apiBase) {
+          this.data.apiBase = apiBase;
+          localStorage.setItem('agrosmart_api_base', apiBase);
+          this.showNotification('Configuration saved! Restarting sensor monitoring...', 'success');
+
+          // Restart sensor fetching with new API base
+          this.stopSensorFetching();
+          setTimeout(() => {
+            this.startSensorFetching();
+          }, 1000);
+        }
+      }
+
+      startSensorFetching() {
+        this.fetchSensors(); // Initial fetch
+
+        this.intervals.sensorFetch = setInterval(() => {
+          this.fetchSensors();
+        }, 5000); // Every 5 seconds for real-time updates
+      }
+
+      stopSensorFetching() {
+        if (this.intervals.sensorFetch) {
+          clearInterval(this.intervals.sensorFetch);
+          this.intervals.sensorFetch = null;
+        }
+      }
+
+      async fetchSensors() {
+        try {
+          const response = await fetch(`${this.data.apiBase}/api/sensors`);
+
+          if (response.ok) {
+            const data = await response.json();
+
+            // Update connection status
+            this.updateConnectionStatus(true);
+
+            // Update sensor data with animation
+            this.updateSensorData(data);
+
+            this.data.sensorData = data;
+            this.data.lastUpdated = new Date();
+
+            // Update last updated display
+            document.getElementById('lastUpdated').textContent = this.data.lastUpdated.toLocaleTimeString();
+
+            // Update ESP32 IP display
+            if (data.esp32_ip) {
+              document.getElementById('esp32IP').textContent = data.esp32_ip;
+            }
+
+            // Update pump status
+            document.getElementById('pumpStatus').textContent = data.pump_running ? 'ON' : 'OFF';
+
+            // Update irrigation status
+            this.updateIrrigationStatus(data);
+
+          } else {
+            throw new Error(`HTTP ${response.status}`);
+          }
+        } catch (error) {
+          console.error('Error fetching sensors:', error);
+          this.updateConnectionStatus(false);
+          this.showNotification('Failed to connect to backend server', 'warning');
+        }
+      }
+
+      updateConnectionStatus(connected) {
+        this.data.connected = connected;
+        const dot = document.getElementById('connectionDot');
+        const status = document.getElementById('connectionStatus');
+
+        if (connected) {
+          dot.classList.add('connected');
+          status.textContent = 'ESP32 Connected';
+        } else {
+          dot.classList.remove('connected');
+          status.textContent = 'Connection Lost';
+        }
+      }
+
+      updateSensorData(data) {
+        // Animate sensor updates
+        const sensors = ['temp', 'soil', 'humidity', 'tank'];
+
+        sensors.forEach(sensor => {
+          const element = document.getElementById(`${sensor}Sensor`);
+          if (element) {
+            element.classList.add('updating');
+            setTimeout(() => {
+              element.classList.remove('updating');
+            }, 1000);
+          }
+        });
+
+        // Update values
+        if (data.temperature !== undefined) {
+          document.getElementById('tempNotif').textContent = `${data.temperature}°C`;
+        }
+        if (data.soil_moisture !== undefined) {
+          document.getElementById('soilNotif').textContent = `${data.soil_moisture}%`;
+        }
+        if (data.humidity !== undefined) {
+          document.getElementById('humidityNotif').textContent = `${data.humidity}%`;
+        }
+        if (data.water_level !== undefined) {
+          document.getElementById('tankNotif').textContent = `${data.water_level}L`;
+        }
+      }
+
+      updateIrrigationStatus(data) {
+        const timerNotification = document.getElementById('timerNotification');
+
+        if (data.pump_running) {
+          timerNotification.textContent = '💧 ESP32 Pump Running - Irrigation Active';
+          timerNotification.style.background = 'rgba(76,175,80,0.2)';
+          timerNotification.style.borderColor = 'var(--accent)';
+        } else {
+          timerNotification.textContent = 'No active irrigation';
+          timerNotification.style.background = 'rgba(76,175,80,0.1)';
+          timerNotification.style.borderColor = 'rgba(76,175,80,0.2)';
+        }
+      }
+
+      updateModeDisplay() {
+        const isAutomatic = this.data.mode === 'automatic';
+
+        // Show/hide AI status
+        document.getElementById('aiStatusContainer').style.display = isAutomatic ? 'block' : 'none';
+
+        // Show/hide manual controls
+        document.getElementById('manualControlsSection').style.display = isAutomatic ? 'none' : 'block';
+
+        if (isAutomatic) {
+          this.startAIMonitoring();
+        } else {
+          this.stopAIMonitoring();
+        }
+      }
+
+      startAIMonitoring() {
+        this.fetchAIDecision(); // Initial check
+
+        this.intervals.aiCheck = setInterval(() => {
+          this.fetchAIDecision();
+        }, 15000); // Every 15 seconds
+      }
+
+      stopAIMonitoring() {
+        if (this.intervals.aiCheck) {
+          clearInterval(this.intervals.aiCheck);
+          this.intervals.aiCheck = null;
+        }
+      }
+
+      async fetchAIDecision() {
+        try {
+          const response = await fetch(`${this.data.apiBase}/api/ai/analyze`);
+
+          if (response.ok) {
+            const decision = await response.json();
+            this.updateAIDisplay(decision);
+          }
+        } catch (error) {
+          console.error('Error fetching AI decision:', error);
+        }
+      }
+
+      updateAIDisplay(decision) {
+        const decisionText = document.getElementById('aiDecisionText');
+        const reasoningText = document.getElementById('aiReasoningText');
+
+        decisionText.textContent = decision.reason || 'Analyzing sensor data...';
+        reasoningText.textContent = decision.reasoning || 'AI is processing real-time ESP32 sensor data';
+
+        if (decision.should_irrigate) {
+          decisionText.style.background = 'rgba(255, 152, 0, 0.2)';
+          decisionText.style.borderColor = '#ff9800';
+          decisionText.style.color = '#e65100';
+        } else {
+          decisionText.style.background = 'var(--light-green)';
+          decisionText.style.borderColor = 'var(--accent)';
+          decisionText.style.color = 'var(--primary-green)';
+        }
+      }
+
+      async startManualIrrigation() {
+        const duration = parseInt(document.getElementById('immediateDuration').value);
+        const zone = document.getElementById('immediateZone').value;
+
+        try {
+          const response = await fetch(`${this.data.apiBase}/api/irrigation/control`, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+              action: 'start',
+              duration: duration,
+              zone: zone,
+              type: 'manual'
+            })
+          });
+
+          const result = await response.json();
+
+          if (result.success) {
+            this.showNotification(`ESP32 pump started for ${duration} minutes`, 'success');
+          } else {
+            this.showNotification(`Failed to start pump: ${result.error}`, 'danger');
+          }
+        } catch (error) {
+          console.error('Error starting irrigation:', error);
+          this.showNotification('Failed to communicate with server', 'danger');
+        }
+      }
+
+      async stopManualIrrigation() {
+        try {
+          const response = await fetch(`${this.data.apiBase}/api/irrigation/control`, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+              action: 'stop'
+            })
+          });
+
+          const result = await response.json();
+
+          if (result.success) {
+            this.showNotification('ESP32 pump stopped', 'success');
+          } else {
+            this.showNotification(`Failed to stop pump: ${result.error}`, 'danger');
+          }
+        } catch (error) {
+          console.error('Error stopping irrigation:', error);
+          this.showNotification('Failed to communicate with server', 'danger');
+        }
+      }
+
+      async openMotorLog() {
+        document.getElementById('motorLogModal').classList.add('active');
+
+        try {
+          const response = await fetch(`${this.data.apiBase}/api/motor-log`);
+          const data = await response.json();
+
+          const logContent = document.getElementById('motorLogContent');
+          logContent.innerHTML = '';
+
+          if (data.logs && data.logs.length > 0) {
+            data.logs.reverse().forEach(log => {
+              const div = document.createElement('div');
+              div.className = 'log-item';
+
+              const date = new Date(log.timestamp).toLocaleString();
+              const action = log.action.replace('_', ' ').toUpperCase();
+              const type = log.type || 'Unknown';
+              const duration = log.duration || log.duration_completed || 'N/A';
+
+              div.innerHTML = `
+                <strong>${action} - ${type.toUpperCase()}</strong><br>
+                <small class="muted">${date} - Duration: ${duration} min</small>
+                ${log.reason ? `<br><small class="muted">Reason: ${log.reason}</small>` : ''}
+              `;
+
+              logContent.appendChild(div);
+            });
+          } else {
+            logContent.innerHTML = '<div class="log-item"><strong>No irrigation history found</strong><br><small class="muted">Start using the system to see logs here</small></div>';
+          }
+        } catch (error) {
+          console.error('Error fetching motor log:', error);
+          document.getElementById('motorLogContent').innerHTML = '<div class="log-item"><strong>Error loading logs</strong><br><small class="muted">Failed to connect to server</small></div>';
+        }
+      }
+
+      async sendChatMessage() {
+        const input = document.getElementById('chatbotInput');
+        const message = input.value.trim();
+
+        if (!message) return;
+
+        this.addChatMessage(message, 'user');
+        input.value = '';
+
+        try {
+          const response = await fetch(`${this.data.apiBase}/api/chat`, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+              message: message,
+              language: 'en'
+            })
+          });
+
+          const result = await response.json();
+
+          if (result.success) {
+            setTimeout(() => {
+              this.addChatMessage(result.response, 'bot');
+            }, 1000);
+          } else {
+            this.addChatMessage('Sorry, I encountered an error. Please try again.', 'bot');
+          }
+        } catch (error) {
+          console.error('Error in chat:', error);
+          this.addChatMessage('Sorry, I cannot connect to the server right now.', 'bot');
+        }
+      }
+
+      addChatMessage(message, type) {
+        const container = document.getElementById('chatbotMessages');
+        const div = document.createElement('div');
+        div.style.cssText = 'margin-bottom: 16px; display: flex; align-items: flex-start; gap: 10px;' + (type === 'user' ? ' flex-direction: row-reverse;' : '');
+
+        const avatar = document.createElement('div');
+        avatar.style.cssText = 'width: 32px; height: 32px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 16px; flex-shrink: 0;';
+        avatar.style.background = type === 'bot' ? 'var(--accent)' : 'var(--primary-green)';
+        avatar.style.color = 'white';
+        avatar.textContent = type === 'bot' ? '🌱' : '👤';
+
+        const content = document.createElement('div');
+        content.style.cssText = 'padding: 12px 16px; border-radius: 16px; max-width: 80%;';
+        if (type === 'bot') {
+          content.style.background = 'var(--light-green)';
+          content.style.borderLeft = '4px solid var(--accent)';
+        } else {
+          content.style.background = 'var(--primary-green)';
+          content.style.color = 'white';
+        }
+        content.textContent = message;
+
+        div.appendChild(avatar);
+        div.appendChild(content);
+        container.appendChild(div);
+        container.scrollTop = container.scrollHeight;
+      }
+
+      async testConnection() {
+        this.showNotification('Testing ESP32 connection...', 'info');
+
+        try {
+          const response = await fetch(`${this.data.apiBase}/api/irrigation/status`);
+          const data = await response.json();
+
+          if (data.esp32_connected) {
+            this.showNotification(`ESP32 connected at ${data.esp32_ip}`, 'success');
+          } else {
+            this.showNotification('ESP32 not connected to backend', 'warning');
+          }
+        } catch (error) {
+          this.showNotification('Failed to test connection', 'danger');
+        }
+      }
+
+      showNotification(message, type = 'info') {
+        const notification = document.createElement('div');
+        notification.textContent = message;
+        notification.style.cssText = `
+          position: fixed;
+          top: 20px;
+          right: 20px;
+          padding: 15px 20px;
+          background: ${type === 'success' ? '#4caf50' : type === 'warning' ? '#ff9800' : type === 'danger' ? '#f44336' : '#2196F3'};
+          color: white;
+          border-radius: 8px;
+          box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+          z-index: 10000;
+          max-width: 300px;
+        `;
+
+        document.body.appendChild(notification);
+
+        setTimeout(() => {
+          if (document.body.contains(notification)) {
+            document.body.removeChild(notification);
+          }
+        }, 4000);
+      }
+    }
+
+    // Initialize the application
+    const app = new AgroSmartESP32App();
+  </script>
+</body>
+</html>
