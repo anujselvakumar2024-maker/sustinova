@@ -1,0 +1,47 @@
+// Required Arduino Libraries for AgroSmart ESP32
+// Install these libraries in Arduino IDE:
+
+1. WiFi (ESP32 Core) - Already included
+2. HTTPClient (ESP32 Core) - Already included  
+3. DHT sensor library by Adafruit
+4. WebServer (ESP32 Core) - Already included
+
+// To install DHT library:
+// 1. Open Arduino IDE
+// 2. Go to Sketch > Include Library > Manage Libraries
+// 3. Search for "DHT sensor library" by Adafruit
+// 4. Install the library
+
+// Pin Connections:
+// DHT11 Sensor:
+//   - VCC: 3.3V or 5V
+//   - GND: GND  
+//   - DATA: GPIO 27
+
+// Soil Moisture Sensor:
+//   - VCC: 3.3V
+//   - GND: GND
+//   - A0: GPIO 34 (ADC1)
+
+// Water Level Sensor:
+//   - VCC: 3.3V  
+//   - GND: GND
+//   - A0: GPIO 32 (ADC1)
+
+// Rain Sensor:
+//   - VCC: 3.3V
+//   - GND: GND
+//   - D0: GPIO 33 (with pull-up)
+
+// Relay Module:
+//   - VCC: 5V (from external power)
+//   - GND: Common GND
+//   - IN: GPIO 26
+//   - COM: Connect to pump positive
+//   - NO: Connect to power supply positive
+
+// IMPORTANT: Replace <YOUR_PC_IP> in the ESP32 code with your actual computer's IP address
+// Find your IP address:
+// Windows: Run "ipconfig" in Command Prompt
+// Mac/Linux: Run "ifconfig" in Terminal
+// Look for your WiFi adapter's IP address (usually 192.168.x.x)
